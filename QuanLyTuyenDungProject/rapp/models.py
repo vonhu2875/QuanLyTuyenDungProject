@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask_login import UserMixin
 from sqlalchemy import Column, String, Enum, Float, Text, DateTime, Integer, ForeignKey
@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 
 from rapp import db, app
 from enum import Enum as UserEnum
+
 
 
 class BaseModel(db.Model):
@@ -80,14 +81,72 @@ if __name__ == '__main__':
         c4 = Category(name="Ngôn ngữ Anh")
         db.session.add_all([c1, c2, c3, c4])
 
+        password = str(hashlib.md5('123456'.encode('utf-8')).hexdigest())
         admin = User(
             name="Quản trị viên",
             username="admin",
-            password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+            password=password,
             user_role=UserRole.ADMIN,
             phone="0123456789",
             email="admin@gmail.com"
         )
         db.session.add(admin)
+
+        emp1 = User(name='Công ty Công nghệ ABC',
+                   username='employer1',
+                   password=password,
+                   user_role=UserRole.EMPLOYER,
+                   phone="0123456789",
+                   email="employer1@gmail.com")
+
+        emp2 = User(name='Công ty Công nghệ XYZ',
+                   username='employer2',
+                   password=password,
+                   user_role=UserRole.EMPLOYER,
+                   phone="0123456789",
+                   email="employer2@gmail.com")
+
+
+        db.session.add_all([emp1, emp2])
+        db.session.commit()
+
+        now = datetime.now()
+        j1 = Job(title='Lập trình viên Python (Flask/Django)',
+                 description='Phát triển hệ thống Backend, yêu cầu 1 năm kinh nghiệm Python.',
+                 salary=15000000,
+                 deadline= now+timedelta(days=15),
+                 category_id=c1.id,
+                 employer_id=emp1.id)
+
+        j2 = Job(title='Chuyên viên Phân tích Dữ liệu',
+                 description='Sử dụng SQL, Python để phân tích dữ liệu kinh doanh.',
+                 salary=20000000,
+                 deadline=now + timedelta(days=20),
+                 category_id=c1.id,
+                 employer_id=emp2.id)
+
+        j3 = Job(title='Kế toán tổng hợp',
+                 description='Thực hiện báo cáo thuế, quản lý sổ sách chứng từ.',
+                 salary=12000000,
+                 deadline=now + timedelta(days=21),
+                 category_id=c2.id,
+                 employer_id=emp2.id)
+
+        j4 = Job(title='Content Creator (TikTok/Facebook)',
+                 description='Sáng tạo nội dung video, quản lý Fanpage công ty.',
+                 salary=10000000,
+                 deadline=now + timedelta(days=35),
+                 category_id=c3.id,
+                 employer_id=emp1.id)
+
+        j5 = Job(title='Biên dịch viên tiếng Anh',
+                 description='Dịch thuật các tài liệu kỹ thuật và hợp đồng kinh tế.',
+                 salary=18000000,
+                 deadline=now + timedelta(days=15),
+                 category_id=c4.id,
+                 employer_id=emp1.id)
+
+        db.session.add_all([j1, j2, j3, j4, j5])
+        db.session.commit()
 
         db.session.commit()

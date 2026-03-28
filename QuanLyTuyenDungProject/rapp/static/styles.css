@@ -1,0 +1,75 @@
+:root {
+    --primary-color: #4e73df;
+    --secondary-color: #f8f9fc;
+}
+
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    padding: 60px 0;
+    margin-bottom: 30px;
+    border-radius: 0 0 50px 50px;
+}
+
+.job-card {
+    transition: all 0.3s ease;
+    border: none;
+    border-radius: 15px;
+}
+
+.job-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+.category-link {
+    transition: all 0.2s;
+}
+
+.category-link.active {
+    background-color: #4e73df !important;
+    border-color: #4e73df !important;
+}
+
+.salary-tag {
+    color: #e74a3b;
+    font-weight: bold;
+}
+
+
+/* Hiệu ứng trượt cho Dropdown */
+.animate {
+    animation-duration: 0.2s;
+    -webkit-animation-duration: 0.2s;
+    animation-fill-mode: both;
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0rem);
+        opacity: 1;
+    }
+}
+
+.slideIn {
+    animation-name: slideIn;
+}
+
+.nav-link:hover {
+    color: #4e73df !important;
+}
+
+.navbar-brand:hover {
+    opacity: 0.9;
+}
+
+

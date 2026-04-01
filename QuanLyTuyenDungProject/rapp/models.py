@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timedelta
 
 from flask_login import UserMixin
-from sqlalchemy import Column, String, Enum, Float, Text, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, Enum, Float, Text, DateTime, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from rapp import db, app
@@ -35,7 +35,7 @@ class User(BaseModel, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     user_role = Column(Enum(UserRole), nullable=False)
-    phone = Column(String(10), nullable=False)
+    phone = Column(String(15), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
 
     jobs = relationship('Job', backref='employer', lazy=True)
@@ -60,6 +60,12 @@ class Job(BaseModel):
     category_id = Column(Integer, ForeignKey(Category.id), nullable=False)
     employer_id = Column(Integer, ForeignKey(User.id), nullable=False)
     applications = relationship('Application', backref='job', lazy=True)
+
+    #Tạo ràng buộc mỗi nhà tuyển dụng không được tạo trùng tiêu đề
+    __table_args__=(
+        UniqueConstraint('title', 'employer_id', name='unique_job_per_company'),
+    )
+
     def __str__(self):
         return self.title
 
@@ -71,6 +77,12 @@ class Application(BaseModel):
     feedback = Column(Text, nullable=True)
     job_id = Column(Integer, ForeignKey(Job.id), nullable=False)
     candidate_id = Column(Integer, ForeignKey(User.id), nullable=False)
+
+    #Tạo ràng buộc mỗi ứng viên chỉ được ứng tuyển 1 hồ sơ cho 1 vị trí duy nhất
+    __table_args__ = (
+        UniqueConstraint('candidate_id', 'job_id', name='unique_application'),
+    )
+
 
 if __name__ == '__main__':
     with app.app_context():
@@ -129,14 +141,14 @@ if __name__ == '__main__':
                  description='Thực hiện báo cáo thuế, quản lý sổ sách chứng từ.',
                  salary=12000000,
                  deadline=now + timedelta(days=21),
-                 category_id=c2.id,
+                 category_id=c3.id,
                  employer_id=emp2.id)
 
         j4 = Job(title='Content Creator (TikTok/Facebook)',
                  description='Sáng tạo nội dung video, quản lý Fanpage công ty.',
                  salary=10000000,
                  deadline=now + timedelta(days=35),
-                 category_id=c3.id,
+                 category_id=c2.id,
                  employer_id=emp1.id)
 
         j5 = Job(title='Biên dịch viên tiếng Anh',

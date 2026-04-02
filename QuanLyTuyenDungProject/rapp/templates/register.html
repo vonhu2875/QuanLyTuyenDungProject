@@ -1,0 +1,69 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Đăng ký tài khoản{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 600px;">
+    <h1 class="text-jobhub text-center fw-bold">ĐĂNG KÝ NGƯỜI DÙNG</h1>
+
+    {% if err_msg %}
+    <div class="alert alert-danger">{{err_msg}}</div>
+    {% endif %}
+    <form method="post" action="/register" enctype="multipart/form-data" class="shadow-sm p-4 rounded-4 bg-white border">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="name" name="name" placeholder="Họ tên" required>
+            <label for="name">Họ và tên</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+            <label for="username">Tên đăng nhập (5-20 ký tự)</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            <label for="email">Email liên lạc</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Số điện thoại" required>
+            <label for="phone">Số điện thoại</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <select class="form-select" id="user_role" name="user_role" required>
+                <option value="" selected disabled>-- Chọn vai trò --</option>
+                {% for role in UserRole %}
+                    <option value="{{ role.name }}">{{role.name}}</option>
+                {% endfor %}
+            </select>
+            <label for="user_role">Bạn là ai?</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="pwd" name="password" placeholder="Mật khẩu" required>
+            <label for="pwd">Mật khẩu</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="confirm" name="confirm" placeholder="Xác nhận" required>
+            <label for="confirm">Xác nhận mật khẩu</label>
+        </div>
+
+        <div class="mb-3">
+            <label for="avatar" class="form-label text-secondary px-2" style="font-size: 0.85rem;">Ảnh đại diện</label>
+            <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+        </div>
+
+        <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-jobhub btn-lg fw-bold rounded-pill shadow-sm">
+                Tạo tài khoản
+            </button>
+        </div>
+
+        <p class="text-center mt-3">
+            Đã có tài khoản? <a href="/login" class="text-jobhub fw-bold text-decoration-none">Đăng nhập ngay</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

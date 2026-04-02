@@ -76,4 +76,30 @@ body {
     opacity: 0.9;
 }
 
+/*Trang register*/
+.text-jobhub {
+        color: #0d6efd; /* Màu xanh Primary của Bootstrap rất gần với logo của bạn */
+    }
+    .btn-jobhub {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+    }
+    .btn-jobhub:hover {
+        background-color: #0b5ed7;
+        color: white;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 
+/*Trang login*/
+body {
+        background-color: #f4f7f9;
+    }
+.form-control:focus {
+    background-color: #ffffff !important;
+    border: 1px solid #0d6efd !important;
+    box-shadow: none !important;
+}

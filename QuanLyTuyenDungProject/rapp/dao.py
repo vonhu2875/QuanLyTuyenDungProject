@@ -87,4 +87,4 @@ def add_user(name, username, password, avatar, email, phone, user_role):
 
 def auth_user(username, password):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    return User.query.filter(User.username==username, password==password).first()
+    return User.query.filter(User.username==username, User.password==password).first()

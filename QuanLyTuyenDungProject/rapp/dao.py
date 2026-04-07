@@ -1,7 +1,11 @@
 import hashlib
+from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
-from rapp.models import Category, Job, User
+from flask_login import current_user
+from sqlalchemy import func
+
+from rapp.models import Category, Job, User, UserRole
 from flask import current_app
 import cloudinary.uploader
 from rapp import db
@@ -84,6 +88,37 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     except IntegrityError:
         db.session.rollback()
         raise Exception("Username đã tồn tại!")
+
+def add_job(title, description, salary, deadline, category_id):
+    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+        raise ValidationError("Bạn không có quyền đăng tin!")
+    title = title.strip()
+    if len(title) < 10:
+        raise ValidationError("Tiêu đề phải tối thiểu 10 ký tự!")
+    if len(title) > 255:
+        raise ValidationError("Tiêu đề phải tối đa 255 ký tự!")
+    try:
+        salary = float(salary)
+    except:
+        raise ValidationError("Lương phải là số")
+
+    if salary <= 0:
+        raise ValidationError("Lương phải > 0!")
+    if deadline <= datetime.now():
+        raise ValidationError("Deadline phải lớn hơn ngày tháng năm hiện tại!")
+    if deadline > datetime.now() + timedelta(days=365):
+        raise ValidationError("Hạn deadline tối đa 1 năm kể từ ngày tạo tin!")
+    deadline = deadline.replace(hour=23, minute=59, second=59)
+    if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == current_user.id).first():
+        raise DuplicateError("Tin tuyển dụng đã tồn tại!")
+
+    j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=current_user.id)
+    db.session.add(j)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        raise Exception("Không thể tải Job lên!")
 
 def auth_user(username, password):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())

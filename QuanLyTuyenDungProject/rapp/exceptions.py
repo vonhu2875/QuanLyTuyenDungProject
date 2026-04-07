@@ -5,3 +5,4 @@ class ValidationError(Exception):
 class DuplicateError(Exception):
     # Lỗi do bị trùng dữ liệu
     pass
+

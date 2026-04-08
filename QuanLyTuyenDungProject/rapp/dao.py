@@ -96,7 +96,7 @@ def add_job(title, description, salary, deadline, category_id):
     if len(title) < 10:
         raise ValidationError("Tiêu đề phải tối thiểu 10 ký tự!")
     if len(title) > 255:
-        raise ValidationError("Tiêu đề phải tối đa 255 ký tự!")
+        raise ValidationError("Tiêu đề chỉ tối đa 255 ký tự!")
     try:
         salary = float(salary)
     except:
@@ -104,10 +104,11 @@ def add_job(title, description, salary, deadline, category_id):
 
     if salary <= 0:
         raise ValidationError("Lương phải > 0!")
-    if deadline <= datetime.now():
+    now = datetime.now()
+    if deadline.date() < now.date():
         raise ValidationError("Deadline phải lớn hơn ngày tháng năm hiện tại!")
-    if deadline > datetime.now() + timedelta(days=365):
-        raise ValidationError("Hạn deadline tối đa 1 năm kể từ ngày tạo tin!")
+    if deadline.date() > now.date() + timedelta(days=365):
+        raise ValidationError("Hạn deadline chỉ tối đa 1 năm kể từ ngày tạo tin!")
     deadline = deadline.replace(hour=23, minute=59, second=59)
     if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == current_user.id).first():
         raise DuplicateError("Tin tuyển dụng đã tồn tại!")
@@ -121,5 +122,12 @@ def add_job(title, description, salary, deadline, category_id):
         raise Exception("Không thể tải Job lên!")
 
 def auth_user(username, password):
+    if not password:
+        raise ValidationError("Vui lòng nhập mật khẩu!")
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    return User.query.filter(User.username==username, User.password==password).first()
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        raise ValidationError(f"Không có username {username}!")
+    if user.password != password:
+        raise ValidationError("Nhập mật khẩu không đúng!Vui lòng nhập lại")
+    return user

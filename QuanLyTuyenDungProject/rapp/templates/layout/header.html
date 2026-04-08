@@ -48,7 +48,7 @@
                         {%if current_user.user_role.name == 'CANDIDATE'%}
                         <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Hồ sơ cá nhân</a></li>
                         <li><a class="dropdown-item" href="#"><i class="bi bi-briefcase me-2"></i>Việc làm đã nộp</a>
-                        {% elif current_user.user_role.name == 'EMPLOYER' %}
+                        {% elif current_user.user_role.name == 'EMPLOYER' or current_user.user_role.name == 'ADMIN' %}
                         <li>
                             <a class="dropdown-item" href="/jobs">
                                 <i class="bi bi-plus-circle me-2 text-success"></i>Đăng tin tuyển dụng

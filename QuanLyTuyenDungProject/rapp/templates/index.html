@@ -29,7 +29,7 @@
         {% for i in range(1, pages + 1) %}
         <li class="page-item">
             <a class="page-link"
-                 href="{{url_for('index',page=i,category_id=request.args.get('category_id'),kw=request.args.get('kw')) }}#job-list">{{ i }}
+                 href="{{url_for('index',page=i,category_id=request.args.get('category_id'),kw=request.args.get('kw')) }}">{{ i }}
             </a>
         </li>
         {% endfor %}
@@ -42,12 +42,12 @@
                     <i class="bi bi-grid-fill me-2"></i> DANH MỤC NGÀNH NGHỀ
                 </div>
                 <div class="list-group list-group-flush p-2">
-                    <a href="/#job-list"
+                    <a href="/"
                        class="list-group-item list-group-item-action rounded-3 mb-1 category-link {{ 'active' if not request.args.get('category_id') }}">
                         Tất cả công việc
                     </a>
                     {% for c in categories %}
-                    <a href="/?category_id={{ c.id }}{% if request.args.get('kw') %}&kw={{ request.args.get('kw') }}{% endif %}#job-list"
+                    <a href="/?category_id={{ c.id }}{% if request.args.get('kw') %}&kw={{ request.args.get('kw') }}{% endif %}"
                        class="list-group-item list-group-item-action rounded-3 mb-1 category-link {{ 'active' if request.args.get('category_id')|int == c.id }}">
                         {{ c.name }}
                     </a>

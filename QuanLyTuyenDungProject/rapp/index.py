@@ -85,14 +85,14 @@ def job_view():
     categories = dao.load_categories()
     return render_template('job.html', categories=categories)
 
-@app.route('/jobs', methods=['post'])
+@app.route('/jobs', methods=['POST'])
 @login_required
 def create_job():
     categories = dao.load_categories()
     data = request.form
     title = data.get('title')
     description = data.get('description')
-    salary = data.get('salary')
+    salary = (data.get('salary'))
     deadline_str = data.get('deadline')
     deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
     category_id = int(data.get('category_id'))
@@ -105,6 +105,7 @@ def create_job():
         return render_template('job.html', err_msg=str(dup), categories=categories)
     except Exception as ex:
         return render_template('job.html', err_msg=str(ex), categories=categories)
+
 
 @login.user_loader
 def load_user(user_id):

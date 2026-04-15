@@ -39,7 +39,7 @@ def sample_job(test_session):
 
     j2 = Job(title='Chuyên viên Lập trình C++', description='Sử dụng C++.',
              salary=30000, deadline=datetime.now() + timedelta(days=50),
-             category_id=2, employer_id=3)
+             category_id=2, employer_id=1)
 
     j3 = Job(title='Kế toán viên - Trợ Lý', description='Biết dùng excel.',
              salary=50000, deadline=datetime.now() + timedelta(days=10),
@@ -48,9 +48,11 @@ def sample_job(test_session):
     j4 = Job(title='Trưởng kế toán viên', description='Biết dùng excel.',
              salary=50000, deadline=datetime.now() + timedelta(days=10),
              category_id=3, employer_id=3)
-    test_session.add_all([j1, j2, j3, j4])
-    test_session.commit()
-    return [j1, j2, j3, j4]
 
-def test_testapp():
-    assert True
+    j5 = Job(title='Lập trình viên cấp cao', description='Biết dùng máy.',
+             salary=50000, deadline=datetime.now() + timedelta(days=200),
+             category_id=3, employer_id=1)
+
+    test_session.add_all([j1, j2, j3, j4, j5])
+    test_session.commit()
+    return [j1, j2, j3, j4, j5]

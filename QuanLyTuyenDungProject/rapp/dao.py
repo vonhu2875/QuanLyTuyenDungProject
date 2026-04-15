@@ -2,6 +2,7 @@ import hashlib
 from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
+import unicodedata
 from flask_login import current_user
 from sqlalchemy import func
 
@@ -20,17 +21,31 @@ def get_user_by_id(user_id):
 def load_categories():
     return Category.query.all()
 
+def normalize(text=None):
+    text = text.strip().lower()
+    text = unicodedata.normalize('NFD', text)
+    text = text.encode('ascii', 'ignore').decode('utf-8')
+    return text
+
 def load_jobs(cate_id=None, kw=None, page=None):
     query = Job.query
     if cate_id:
         query = query.filter(Job.category_id.__eq__(cate_id))
+    jobs = query.all()
+    if kw and kw.strip():
+        kw_norm = normalize(kw)
+        filtered = []
+        for j in jobs:
+            if normalize(j.title).__contains__(kw_norm):
+                filtered.append(j)
+        jobs = filtered
 
-    if kw:
-        query = query.filter(Job.title.contains(kw))
-    if page:
+    if page is not None:
+        if page < 1:
+            return []
         start = (page - 1) * current_app.config['PAGE_SIZE']
-        query = query.slice(start, start + current_app.config['PAGE_SIZE'])
-    return query.all()
+        jobs = jobs[start: start + current_app.config['PAGE_SIZE']]
+    return jobs
 
 def count_jobs(category_id=None):
     if category_id:

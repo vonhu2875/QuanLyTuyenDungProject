@@ -10,10 +10,7 @@
     </div>
 
     {% if err_msg %}
-    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" style="border-radius: 4px;">
-        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ err_msg }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <div class="alert alert-danger">{{err_msg}}</div>
     {% endif %}
 
     <div class="card border-0 shadow-sm rounded-3">

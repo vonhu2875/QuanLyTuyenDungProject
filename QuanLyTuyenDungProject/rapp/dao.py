@@ -54,6 +54,8 @@ def count_jobs(category_id=None):
 
 def add_user(name, username, password, avatar, email, phone, user_role):
     username = username.strip()
+
+    # Kiểm tra username
     if len(username) < 5 or len(username) > 20:
         raise ValidationError("Username phải từ 5 đến 20 ký tự!")
 
@@ -64,18 +66,31 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     if not re.match(r'^[a-zA-Z0-9]+$', username):
         raise  ValidationError("Username không được chứa ký tự đặc biệt")
 
+    # Kiểm tra password
+    if len(password) < 8:
+        raise ValueError('Password phải ít nhất 8 ký tự')
+    if not re.search(r'[0-9]', password):
+        raise ValueError('Password phải chứa số')
+    if not re.search(r'[A-Z]', password):
+        raise ValueError('Password phải chứa ký tự hoa')
+    if not re.search(r'[a-z]', password):
+        raise ValueError('Password phải chứa ký tự')
+    #Kiểm tra email
     email_regrex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     if not re.match(email_regrex, email):
         raise ValidationError("Email không đúng định dạng!")
 
+    #Kiểm tra name
     if not name or not name.strip():
         raise ValidationError("Vui lòng nhập tên!")
     if len(name) > 255:
         raise ValidationError("Tên không được quá 255 ký tự!")
 
+    #Kiểm tra user_role
     if user_role is None:
         raise ValidationError("Vai trò không được để trống!")
 
+    #Kiểm tra sdt
     if phone is None:
         raise ValidationError("Bắt buộc nhập số điện thoại!")
 
@@ -85,9 +100,11 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     if not re.match(r'^[0-9]+$', phone):
         raise ValidationError("Số điện thoại không hợp lệ!")
 
+    #Kiểm tra phía dưới db username
     if User.query.filter(User.username.__eq__(username)).first():
         raise DuplicateError(f'Username {username} đã tồn tại')
 
+    # Kiểm tra phía dưới db email
     if User.query.filter(User.email.__eq__(email)).first():
         raise DuplicateError(f'Email {email} đã tồn tại')
 

@@ -68,13 +68,13 @@ def add_user(name, username, password, avatar, email, phone, user_role):
 
     # Kiểm tra password
     if len(password) < 8:
-        raise ValueError('Password phải ít nhất 8 ký tự')
+        raise ValidationError('Password phải ít nhất 8 ký tự')
     if not re.search(r'[0-9]', password):
-        raise ValueError('Password phải chứa số')
+        raise ValidationError('Password phải chứa số')
     if not re.search(r'[A-Z]', password):
-        raise ValueError('Password phải chứa ký tự hoa')
+        raise ValidationError('Password phải chứa ký tự hoa')
     if not re.search(r'[a-z]', password):
-        raise ValueError('Password phải chứa ký tự')
+        raise ValidationError('Password phải chứa ký tự')
     #Kiểm tra email
     email_regrex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     if not re.match(email_regrex, email):
@@ -89,6 +89,9 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     #Kiểm tra user_role
     if user_role is None:
         raise ValidationError("Vai trò không được để trống!")
+
+    if user_role not in [UserRole.EMPLOYER, UserRole.CANDIDATE]:
+        raise ValidationError("Vai trò không hợp lệ")
 
     #Kiểm tra sdt
     if phone is None:
@@ -120,6 +123,7 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     except IntegrityError:
         db.session.rollback()
         raise Exception("Username đã tồn tại!")
+    return u
 
 def add_job(title, description, salary, deadline, category_id):
     if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
@@ -154,12 +158,12 @@ def add_job(title, description, salary, deadline, category_id):
         raise Exception("Không thể tải Job lên!")
 
 def auth_user(username, password):
+    if not username:
+        raise ValidationError("Vui lòng nhập username!")
     if not password:
         raise ValidationError("Vui lòng nhập mật khẩu!")
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    user = User.query.filter(User.username == username).first()
-    if not user:
-        raise ValidationError(f"Không có username {username}!")
-    if user.password != password:
-        raise ValidationError("Nhập mật khẩu không đúng!Vui lòng nhập lại")
-    return user
+    u = User.query.filter(User.username == username, User.password == password).first()
+    if not u.active:
+        return None
+    return u

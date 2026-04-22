@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+from cloudinary import uploader
 from flask import Flask
 from rapp import db
 from rapp.models import Job
@@ -56,3 +57,9 @@ def sample_job(test_session):
     test_session.add_all([j1, j2, j3, j4, j5])
     test_session.commit()
     return [j1, j2, j3, j4, j5]
+
+@pytest.fixture
+def mock_cloudinary(monkeypatch):
+    def fake_upload(file):
+        return {'secure_url': 'https://fake-avatar.png'}
+    monkeypatch.setattr('cloudinary.uploader.upload', fake_upload)

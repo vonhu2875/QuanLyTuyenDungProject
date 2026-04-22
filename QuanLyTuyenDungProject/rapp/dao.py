@@ -17,7 +17,6 @@ import re
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
-
 def load_categories():
     return Category.query.all()
 
@@ -122,12 +121,14 @@ def add_user(name, username, password, avatar, email, phone, user_role):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        raise Exception("Username đã tồn tại!")
+        raise Exception("Không thể thêm user!")
     return u
 
-def add_job(title, description, salary, deadline, category_id):
-    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+def add_job(title, description, salary, deadline, category_id, employer_id, user_role):
+    if user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
         raise ValidationError("Bạn không có quyền đăng tin!")
+    if not title:
+        raise ValidationError("Phải có tiêu đề!")
     title = title.strip()
     if len(title) < 10:
         raise ValidationError("Tiêu đề phải tối thiểu 10 ký tự!")
@@ -141,21 +142,22 @@ def add_job(title, description, salary, deadline, category_id):
     if salary <= 0:
         raise ValidationError("Lương phải > 0!")
     now = datetime.now()
-    if deadline.date() < now.date():
+    if deadline < now:
         raise ValidationError("Deadline phải lớn hơn ngày tháng năm hiện tại!")
-    if deadline.date() > now.date() + timedelta(days=365):
+    if deadline > now + timedelta(days=365):
         raise ValidationError("Hạn deadline chỉ tối đa 1 năm kể từ ngày tạo tin!")
     deadline = deadline.replace(hour=23, minute=59, second=59)
-    if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == current_user.id).first():
+    if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == employer_id).first():
         raise DuplicateError("Tin tuyển dụng đã tồn tại!")
 
-    j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=current_user.id)
+    j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=employer_id)
     db.session.add(j)
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         raise Exception("Không thể tải Job lên!")
+    return j
 
 def auth_user(username, password):
     if not username:

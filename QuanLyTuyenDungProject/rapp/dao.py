@@ -166,6 +166,6 @@ def auth_user(username, password):
         raise ValidationError("Vui lòng nhập mật khẩu!")
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
     u = User.query.filter(User.username == username, User.password == password).first()
-    if not u.active:
+    if u and not u.active:
         return None
     return u

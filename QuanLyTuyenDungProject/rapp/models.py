@@ -118,8 +118,15 @@ if __name__ == '__main__':
                    phone="0123456789",
                    email="employer2@gmail.com")
 
+        cand1 = User(name='Ứng viên 1',
+                    username='candidate1',
+                    password=password,
+                    user_role=UserRole.CANDIDATE,
+                    phone="0123456789",
+                    email="candidate1@gmail.com")
 
-        db.session.add_all([emp1, emp2])
+
+        db.session.add_all([emp1, emp2, cand1])
         db.session.commit()
 
         now = datetime.now()

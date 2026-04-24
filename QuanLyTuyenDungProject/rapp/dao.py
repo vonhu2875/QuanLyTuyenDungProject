@@ -1,4 +1,5 @@
 import hashlib
+import os
 from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
@@ -6,7 +7,7 @@ import unicodedata
 from flask_login import current_user
 from sqlalchemy import func
 
-from rapp.models import Category, Job, User, UserRole
+from rapp.models import Category, Job, User, UserRole, Application
 from flask import current_app
 import cloudinary.uploader
 from rapp import db
@@ -27,7 +28,10 @@ def normalize(text=None):
     return text
 
 def load_jobs(cate_id=None, kw=None, page=None):
-    query = Job.query
+    #Thái Hà chỉnh lại dòng này để load những thông tin còn active true
+    #query = Job.query
+    query = Job.query.filter(Job.active.__eq__(True))
+    ###############################
     if cate_id:
         query = query.filter(Job.category_id.__eq__(cate_id))
     jobs = query.all()
@@ -169,3 +173,69 @@ def auth_user(username, password):
     if u and not u.active:
         return None
     return u
+
+
+#=========================Nghiệp vụ 2: Bé Hà==========================
+
+
+def apply_for_job(job_id, candidate_id, user_role, cv_file):
+    # 1. Kiểm tra quyền và đăng nhập
+    if not candidate_id:
+        raise ValidationError("Bạn cần đăng nhập để nộp hồ sơ!")
+    if user_role != UserRole.CANDIDATE:
+        raise ValidationError("Chỉ Ứng viên mới có quyền nộp hồ sơ!")
+
+    # 2. Kiểm tra tin tuyển dụng
+    job = Job.query.get(job_id)
+    if not job:
+        raise ValidationError("Tin tuyển dụng không tồn tại!")
+
+    # RÀNG BUỘC: Không nộp sau hạn hoặc tin đã đóng thủ công
+    if not job.active:
+        raise ValidationError("Tin tuyển dụng này đã đóng hoặc không còn tồn tại!")
+    if job.deadline < datetime.now():
+        raise ValidationError("Đã hết hạn nộp hồ sơ!")
+
+    # 3. Kiểm tra nộp trùng (1 hồ sơ / 1 vị trí)
+    exists = Application.query.filter_by(job_id=job_id, candidate_id=candidate_id).first()
+    if exists:
+        raise DuplicateError("Bạn đã nộp hồ sơ cho công việc này rồi!")
+
+    # 4. Kiểm tra file CV
+    if not cv_file or cv_file.filename == '':
+        raise ValidationError("Vui lòng tải lên CV của bạn!")
+
+    # Kiểm tra đuôi file (Chỉ nhận .pdf)
+    ext = os.path.splitext(cv_file.filename)[1].lower()
+    if ext != '.pdf':
+        raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
+
+    # Kiểm tra dung lượng (0 < size <= 10MB)
+    blob = cv_file.read()
+    size = len(blob)
+    cv_file.seek(0)  # Reset con trỏ file sau khi read
+
+    if size <= 0:
+        raise ValidationError("File CV không được để trống!")
+    if size > 10 * 1024 * 1024:  # 10MB
+        raise ValidationError("Dung lượng file CV tối đa là 10MB!")
+
+    # 5. Lưu hồ sơ
+    try:
+        res = cloudinary.uploader.upload(cv_file)
+        cv_path = res['secure_url']
+
+        new_app = Application(
+            job_id=job_id,
+            candidate_id=candidate_id,
+            cv_path=cv_path
+        )
+        db.session.add(new_app)
+        db.session.commit()
+        return new_app
+    except Exception as e:
+        db.session.rollback()
+        raise Exception("Lỗi hệ thống: " + str(e))
+
+def get_job_by_id(job_id):
+    return Job.query.get(job_id)

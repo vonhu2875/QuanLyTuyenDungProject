@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
 
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from unicodedata import category
 
@@ -110,6 +110,41 @@ def create_job():
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
+
+#=========================Nghiệp vụ 2: Bé Hà==========================
+
+# JOB DETAILS
+@app.route('/jobs/<int:job_id>')
+def job_detail(job_id):
+    job = dao.get_job_by_id(job_id)
+    return render_template('job_details.html', job=job)
+
+# Nghiệp vụ chính 2: Nộp hồ sơ
+@app.route('/apply-upload/<int:job_id>')
+@login_required
+def apply_upload_view(job_id):
+    job = dao.get_job_by_id(job_id)
+    return render_template('apply_job.html', job=job)
+
+
+@app.route('/apply-process/<int:job_id>', methods=['POST'])
+@login_required
+def apply_job_process(job_id):
+    try:
+        cv_file = request.files.get('cv_file')
+        dao.apply_for_job(
+            job_id=job_id,
+            candidate_id=current_user.id,
+            user_role=current_user.user_role,
+            cv_file=cv_file
+        )
+
+        flash("Nộp hồ sơ thành công! Chúc bạn may mắn.", "success")
+        return redirect(url_for('index'))
+
+    except (ValidationError, DuplicateError) as ex:
+        job = dao.get_job_by_id(job_id)
+        return render_template('apply_job.html', err_msg=str(ex), job=job)
 
 if __name__ == "__main__":
     app.run(debug=True)

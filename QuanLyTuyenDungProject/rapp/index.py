@@ -111,5 +111,33 @@ def create_job():
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
 
+#Nghiệp vụ chính 3: Nộp Hồ Sơ Ứng Tuyển
+
+@app.route('/jobs/<int:job_id>')
+def job_detail(job_id):
+    job = dao.get_job_by_id(job_id)
+    if not job:
+        return redirect('/')
+    success_msg = "Nộp hồ sơ thành công!" if request.args.get('success') else None
+    return render_template('job_detail.html', job=job, success_msg=success_msg)
+
+
+@app.route('/jobs/<int:job_id>/apply', methods=['POST'])
+@login_required
+def apply_job(job_id):
+    job = dao.get_job_by_id(job_id)
+    if not job:
+        return redirect('/')
+    try:
+        dao.add_application(job_id=job_id, cv_file=request.files.get('cv'))
+        return redirect(f'/jobs/{job_id}?success=1')
+    except ValidationError as val:
+        return render_template('job_detail.html', job=job, err_msg=str(val))
+    except DuplicateError as dup:
+        return render_template('job_detail.html', job=job, err_msg=str(dup))
+    except Exception as ex:
+        return render_template('job_detail.html', job=job, err_msg=str(ex))
+
+
 if __name__ == "__main__":
     app.run(debug=True)

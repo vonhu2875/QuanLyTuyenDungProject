@@ -1,0 +1,136 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ job.title }} - JobHub N10{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5" style="max-width: 900px;">
+
+    <div class="mb-3">
+        <a href="/" class="btn btn-link text-decoration-none p-0 text-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách việc làm
+        </a>
+    </div>
+
+    <!-- Thông tin tin tuyển dụng -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                <h2 class="fw-bold text-dark mb-0">{{ job.title }}</h2>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                    <i class="bi bi-broadcast me-1"></i>Đang tuyển
+                </span>
+            </div>
+
+            <p class="text-muted mb-4 fs-6">
+                <i class="bi bi-building me-2"></i>{{ job.employer.name }}
+            </p>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3">
+                        <i class="bi bi-cash-stack text-success fs-4"></i>
+                        <div>
+                            <div class="text-muted small fw-semibold">MỨC LƯƠNG</div>
+                            <div class="fw-bold text-dark">{{ "{:,.0f}".format(job.salary) }} VNĐ</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3">
+                        <i class="bi bi-calendar-event text-danger fs-4"></i>
+                        <div>
+                            <div class="text-muted small fw-semibold">HẠN NỘP HỒ SƠ</div>
+                            <div class="fw-bold text-dark">{{ job.deadline.strftime('%d/%m/%Y') }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3">
+                        <i class="bi bi-grid-fill text-primary fs-4"></i>
+                        <div>
+                            <div class="text-muted small fw-semibold">NGÀNH NGHỀ</div>
+                            <div class="fw-bold text-dark">{{ job.category.name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div>
+                <h5 class="fw-bold mb-3 text-secondary">
+                    <i class="bi bi-file-text me-2"></i>MÔ TẢ CÔNG VIỆC
+                </h5>
+                <p class="text-secondary lh-lg" style="white-space: pre-line;">{{ job.description }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khu vực nộp hồ sơ -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4 p-md-5">
+            <h5 class="fw-bold mb-4 text-primary text-uppercase">
+                <i class="bi bi-file-earmark-person me-2"></i>Nộp Hồ Sơ Ứng Tuyển
+            </h5>
+
+            {% if success_msg %}
+            <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <span>{{ success_msg }}</span>
+            </div>
+            {% endif %}
+
+            {% if err_msg %}
+            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-circle-fill fs-5"></i>
+                <span>{{ err_msg }}</span>
+            </div>
+            {% endif %}
+
+            {% if not current_user.is_authenticated %}
+            <!-- Chưa đăng nhập -->
+            <div class="text-center py-4">
+                <i class="bi bi-lock fs-1 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-4">Bạn cần đăng nhập để ứng tuyển vị trí này.</p>
+                <a href="/login?next=/jobs/{{ job.id }}"
+                    class="btn btn-primary fw-bold rounded-pill px-5 py-2 shadow-sm">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập để ứng tuyển
+                </a>
+            </div>
+
+            {% elif current_user.user_role.name in ['EMPLOYER', 'ADMIN'] %}
+            <!-- Nhà tuyển dụng / Admin -->
+            <div class="text-center py-4">
+                <i class="bi bi-info-circle fs-1 text-muted mb-3 d-block"></i>
+                <p class="text-muted">Tài khoản nhà tuyển dụng không thể nộp hồ sơ ứng tuyển.</p>
+            </div>
+
+            {% else %}
+            <!-- Ứng viên CANDIDATE -->
+            <form method="POST" action="/jobs/{{ job.id }}/apply" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label for="cv" class="form-label fw-bold text-secondary">FILE CV (Định dạng .PDF)</label>
+                    <input type="file" class="form-control bg-light border-0 py-3 px-4" id="cv" name="cv" accept=".pdf"
+                        required style="border-radius: 8px;">
+                    <div class="form-text mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Chỉ chấp nhận file PDF, không có mật khẩu bảo vệ.
+                    </div>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary fw-bold py-3 shadow-sm"
+                        style="border-radius: 8px; font-size: 1.1rem;">
+                        <i class="bi bi-send me-2"></i>NỘP HỒ SƠ
+                    </button>
+                    <a href="/" class="btn btn-link text-decoration-none mt-2 text-secondary">
+                        Hủy bỏ và quay lại
+                    </a>
+                </div>
+            </form>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

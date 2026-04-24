@@ -1,17 +1,25 @@
 import hashlib
+import io
+import re
+import unicodedata
 from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
-import unicodedata
+import cloudinary.uploader
+from flask import current_app
 from flask_login import current_user
 from sqlalchemy import func
 
-from rapp.models import Category, Job, User, UserRole
-from flask import current_app
-import cloudinary.uploader
+
+try:
+    import pypdf
+    _PYPDF_AVAILABLE = True
+except ImportError:
+    _PYPDF_AVAILABLE = False
+
 from rapp import db
-from rapp.exceptions import ValidationError, DuplicateError
-import re
+from rapp.exceptions import DuplicateError, ValidationError
+from rapp.models import Application, AppStatus, Category, Job, User, UserRole
 
 
 def get_user_by_id(user_id):
@@ -146,3 +154,52 @@ def auth_user(username, password):
     if user.password != password:
         raise ValidationError("Nhập mật khẩu không đúng!Vui lòng nhập lại")
     return user
+
+#Nghiệp vụ chính 3: Nộp Hồ Sơ Ứng Tuyển
+
+def get_job_by_id(job_id):
+    return Job.query.get(job_id)
+
+
+def _is_pdf_encrypted(file_bytes):
+    if _PYPDF_AVAILABLE:
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            return reader.is_encrypted
+        except Exception:
+            return False
+    return b'/Encrypt' in file_bytes
+
+
+def add_application(job_id, cv_file):
+    if current_user.user_role != UserRole.CANDIDATE:
+        raise ValidationError("Bạn không có quyền nộp hồ sơ!")
+
+    if not cv_file or not cv_file.filename:
+        raise ValidationError("Vui lòng đính kèm file CV!")
+
+    if not cv_file.filename.lower().endswith('.pdf'):
+        raise ValidationError("Chỉ chấp nhận file định dạng .pdf!")
+
+    file_bytes = cv_file.read()
+
+    if _is_pdf_encrypted(file_bytes):
+        raise ValidationError("File PDF không được bảo vệ bằng mật khẩu!")
+
+    existing = Application.query.filter_by(
+        candidate_id=current_user.id,
+        job_id=job_id
+    ).first()
+    if existing:
+        raise DuplicateError("Mỗi ứng viên chỉ được nộp 1 hồ sơ cho mỗi vị trí!")
+
+    res = cloudinary.uploader.upload(io.BytesIO(file_bytes), resource_type='raw', folder='cv')
+    cv_url = res.get('secure_url')
+
+    application = Application(cv_path=cv_url, job_id=job_id, candidate_id=current_user.id)
+    db.session.add(application)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise Exception("Không thể lưu hồ sơ, vui lòng thử lại!")

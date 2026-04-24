@@ -1,52 +1,57 @@
 {% extends 'layout/base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8">
-            <h1 class="display-4">{{ job.title }}</h1>
-            <p class="text-muted">
-                Danh mục: {{ job.category.name }} | Hạn nộp: {{ job.deadline.strftime('%d/%m/%Y') }}
-                {% if job.active %}
-                    <span class="badge bg-success ms-2">Đang tuyển</span>
-                {% else %}
-                    <span class="badge bg-danger ms-2">Đã đóng</span>
-                {% endif %}
-            </p>
-            <hr>
-            <h4>Mô tả công việc</h4>
-            <div class="job-description">
-                {{ job.description }}
-            </div>
-            <h4 class="mt-4">Mức lương</h4>
-            <p class="text-success fw-bold">{{ "{:,.0f}".format(job.salary) }} VNĐ</p>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5>Sẵn sàng ứng tuyển?</h5>
-                    <p class="small text-muted">Lưu ý: Chỉ chấp nhận file định dạng .pdf (Tối đa 10MB)</p>
-                    
-                    {% if current_user.is_authenticated %}
-                        {% if current_user.user_role.name == 'CANDIDATE' %}
-                            <a href="{{ url_for('apply_upload_view', job_id=job.id) }}" class="btn btn-primary btn-lg w-100">
-                                Ứng tuyển ngay
-                            </a>
-                        {% elif current_user.user_role.name == 'ADMIN' or (current_user.user_role.name == 'EMPLOYER' and current_user.id == job.employer_id) %}
-                            <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-info btn-lg w-100">
-                                <i class="bi bi-people me-2"></i>Xem hồ sơ ứng tuyển
-                            </a>
-                        {% else %}
-                            <button class="btn btn-secondary w-100" disabled>
-                                Chỉ Ứng viên mới được nộp
-                            </button>
-                        {% endif %}
+<div class="container">
+    <div class="job-detail-container">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="job-title-large">{{ job.title }}</h1>
+                <div class="job-meta-item">
+                     <i class="bi bi-tag"></i> Danh mục: {{ job.category.name }}
+                </div>
+                <p class="text-muted">
+                    Danh mục: {{ job.category.name }} | Hạn nộp: {{ job.deadline.strftime('%d/%m/%Y') }}
+                    {% if job.active %}
+                        <span class="badge bg-success ms-2">Đang tuyển</span>
                     {% else %}
-                        <a href="{{ url_for('login_view', next=request.path) }}" class="btn btn-warning w-100">
-                            Đăng nhập để ứng tuyển
-                        </a>
+                        <span class="badge bg-danger ms-2">Đã đóng</span>
                     {% endif %}
+                </p>
+                <hr>
+                <h4>Mô tả công việc</h4>
+                <div class="job-description">
+                    {{ job.description }}
+                </div>
+                <h4 class="mt-4">Mức lương</h4>
+                <p class="text-success fw-bold">{{ "{:,.0f}".format(job.salary) }} VNĐ</p>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h5>Sẵn sàng ứng tuyển?</h5>
+                        <p class="small text-muted">Lưu ý: Chỉ chấp nhận file định dạng .pdf (Tối đa 10MB)</p>
+
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.user_role.name == 'CANDIDATE' %}
+                                <a href="{{ url_for('apply_upload_view', job_id=job.id) }}" class="btn btn-jobhub btn-lg w-100">
+                                    Ứng tuyển ngay
+                                </a>
+                            {% elif current_user.user_role.name == 'ADMIN' or (current_user.user_role.name == 'EMPLOYER' and current_user.id == job.employer_id) %}
+                                <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-info btn-lg w-100">
+                                    <i class="bi bi-people me-2"></i>Xem hồ sơ ứng tuyển
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary w-100" disabled>
+                                    Chỉ Ứng viên mới được nộp
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('login_view', next=request.path) }}" class="btn btn-warning w-100">
+                                Đăng nhập để ứng tuyển
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

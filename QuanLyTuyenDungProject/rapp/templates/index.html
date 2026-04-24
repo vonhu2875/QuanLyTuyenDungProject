@@ -1,6 +1,22 @@
 {%extends 'layout/base.html'%}
 {%block content%}
-<body>
+<div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show shadow-sm rounded-4 border-0"
+                     style="background-color: {% if category == 'success' %}#f0fdf4{% else %}#fef2f2{% endif %}; color: {% if category == 'success' %}#166534{% else %}#991b1b{% endif %};">
+                    <div class="d-flex align-items-center">
+                        <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2 fs-5"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
 <div class="hero-section shadow">
     <div class="container text-center">
         <h1 class="display-4 fw-bold mb-3">Tìm Việc Làm Nhanh 24h</h1>
@@ -12,7 +28,7 @@
                     <input type="text" name="kw" value="{{ request.args.get('kw', '') }}"
                            class="form-control border-0 rounded-pill ps-4"
                            placeholder="Tên công việc bạn muốn tìm...">
-                    <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold flex-shrink-0 d-flex align-items-center"
+                    <button class="btn btn-jobhub rounded-pill px-4 py-2 fw-bold flex-shrink-0 d-flex align-items-center"
                             type="submit">
                         <i class="bi bi-search me-2"></i>
                         <span style="white-space: nowrap;">Tìm kiếm</span>
@@ -43,13 +59,13 @@
                 </div>
                 <div class="list-group list-group-flush p-2">
                     <a href="/"
-                       class="list-group-item list-group-item-action rounded-3 mb-1 category-link {{ 'active' if not request.args.get('category_id') }}">
+                      class="list-group-item list-group-item-action rounded-3 mb-1 category-link {{ 'active' if not request.args.get('category_id') }}">
                         Tất cả công việc
                     </a>
                     {% for c in categories %}
-                    <a href="/?category_id={{ c.id }}{% if request.args.get('kw') %}&kw={{ request.args.get('kw') }}{% endif %}"
-                       class="list-group-item list-group-item-action rounded-3 mb-1 category-link {{ 'active' if request.args.get('category_id')|int == c.id }}">
-                        {{ c.name }}
+                    <a href="/?category_id={{ c.id }}"
+                       class="btn {% if request.args.get('category_id')|int == c.id %}btn-jobhub{% else %}btn-outline-jobhub{% endif %} rounded-pill me-2 mb-2">
+                       {{ c.name }}
                     </a>
                     {% endfor %}
                 </div>
@@ -69,7 +85,7 @@
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h5 class="card-title fw-bold text-dark mb-0">{{ j.title }}</h5>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Mới</span>
+                                <span class="badge bg-jobhub-subtle text-jobhub border border-primary-subtle rounded-pill">Mới</span>
                             </div>
                             <p class="text-muted small mb-3">
                                 <i class="bi bi-building me-1"></i> {{ j.employer.name }}
@@ -90,7 +106,7 @@
                             </p>
 
                             <div class="d-grid">
-                                <a href="/jobs/{{ j.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Xem
+                                <a href="/jobs/{{ j.id }}" class="btn btn-outline-jobhub btn-sm rounded-pill px-4">Xem
                                     chi tiết</a>
                             </div>
                         </div>
@@ -109,5 +125,5 @@
         </div>
     </div>
 </div>
-</body>
+
 {%endblock%}

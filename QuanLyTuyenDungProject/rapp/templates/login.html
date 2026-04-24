@@ -3,49 +3,49 @@
 {% block title %}Đăng nhập - JobHub N10{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5" style="max-width: 750px;">
-
-    <div class="text-center mb-4">
-        <h2 class="text-primary fw-bold">ĐĂNG NHẬP HỆ THỐNG</h2>
+<div class="container mt-5 mb-5" style="max-width: 500px;"> <div class="text-center mb-4">
+        <h2 class="text-jobhub fw-bold">ĐĂNG NHẬP HỆ THỐNG</h2>
+        <p class="text-muted small">Chào mừng bạn quay trở lại với JobHub</p>
     </div>
 
     {% if err_msg %}
-    <div class="alert alert-danger">{{err_msg}}</div>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{err_msg}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     {% endif %}
 
-    <div class="card border-0 shadow-sm rounded-3">
+    <div class="card border-0 shadow-lg rounded-4">
         <div class="card-body p-4 p-md-5">
             <form method="post" action="/login">
 
                 <div class="mb-4">
-                    <label for="username" class="form-label fw-bold text-secondary small">TÊN ĐĂNG NHẬP</label>
+                    <label for="username" class="form-label">TÊN ĐĂNG NHẬP</label>
                     <input type="text"
-                           class="form-control bg-light border-0 shadow-none"
+                           class="form-control"
                            id="username" name="username"
                            placeholder="Nhập tên đăng nhập..."
-                           style="height: 50px; border-radius: 6px; padding-left: 20px;">
+                           required>
                 </div>
 
                 <div class="mb-4">
-                    <label for="password" class="form-label fw-bold text-secondary small">MẬT KHẨU</label>
+                    <label for="password" class="form-label">MẬT KHẨU</label>
                     <input type="password"
-                           class="form-control bg-light border-0 shadow-none"
+                           class="form-control"
                            id="password" name="password"
                            placeholder="Nhập mật khẩu..."
-                           style="height: 50px; border-radius: 6px; padding-left: 20px;">
+                           required>
                 </div>
 
-                <div class="d-grid gap-2 col-8 mx-auto mt-5">
-                    <button type="submit"
-                            class="btn btn-primary fw-bold shadow-sm"
-                            style="height: 50px; border-radius: 6px; letter-spacing: 1px;">
+                <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-jobhub py-3">
                         ĐĂNG NHẬP
                     </button>
                 </div>
 
                 <div class="text-center mt-4 pt-3 border-top">
                     <span class="text-muted">Chưa có tài khoản?</span>
-                    <a href="/register" class="text-primary fw-bold text-decoration-none ms-1">Đăng ký ngay</a>
+                    <a href="/register" class="text-jobhub fw-bold text-decoration-none ms-1">Đăng ký ngay</a>
                 </div>
             </form>
         </div>

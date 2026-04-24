@@ -138,12 +138,17 @@ def apply_job_process(job_id):
             cv_file=cv_file
         )
 
+        # Thông báo thành công khi nộp xong
         flash("Nộp hồ sơ thành công! Chúc bạn may mắn.", "success")
         return redirect(url_for('index'))
 
     except (ValidationError, DuplicateError) as ex:
-        job = dao.get_job_by_id(job_id)
-        return render_template('apply_job.html', err_msg=str(ex), job=job)
+        flash(str(ex), "danger")
+        return redirect(url_for('apply_upload_view', job_id=job_id))  # Quay lại trang nộp để hiện lỗi
+
+    except Exception as ex:
+        flash("Có lỗi xảy ra, vui lòng thử lại sau.", "danger")
+        return redirect(url_for('apply_upload_view', job_id=job_id))
     
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 

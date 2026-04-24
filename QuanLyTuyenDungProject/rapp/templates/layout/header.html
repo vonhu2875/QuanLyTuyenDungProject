@@ -1,12 +1,14 @@
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm py-2 bg-white">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="/">
-            <div class="bg-primary text-white rounded-3 p-2 me-2 d-flex align-items-center justify-content-center"
-                 style="width: 40px; height: 40px;">
-                <i class="bi bi-rocket-takeoff-fill"></i>
+            <div class="bg-jobhub text-white rounded-3 p-2 me-2 d-flex align-items-center justify-content-center"
+                 style="width: 42px; height: 42px;">
+                <i class="bi bi-briefcase-fill" style="font-size: 1.2rem;"></i>
             </div>
-            <span class="fw-bold text-dark">JOB<span class="text-primary">HUB</span> <small class="text-muted fw-light"
-                                                                                            style="font-size: 0.6em;">N10</small></span>
+            <span class="fw-bold text-dark">
+                JOB<span class="text-jobhub">HUB</span>
+                <small class="text-muted fw-light" style="font-size: 0.6em;">N10</small>
+            </span>
         </a>
 
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -16,7 +18,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
                 <li class="nav-item">
-                    <a class="nav-link px-3 fw-medium {{ 'active text-primary' if request.path == '/' }}" href="/">
+                    <a class="nav-link px-3 fw-medium {{ 'active text-jobhub' if request.path == '/' }}" href="/">
                         <i class="bi bi-house-door me-1"></i> Trang chủ
                     </a>
                 </li>
@@ -47,7 +49,7 @@
                         <li><h6 class="dropdown-header">Tài khoản</h6></li>
                         {%if current_user.user_role.name == 'CANDIDATE'%}
                         <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Hồ sơ cá nhân</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('my_applications') }}"><i class="bi bi-briefcase me-2"></i>Việc làm đã nộp</a>
+                        <li><a class="dropdown-item" href="{{ url_for('my_applications') }}"><i class="bi bi-briefcase me-2"></i>Việc làm đã nộp</a></li>
                         {% elif current_user.user_role.name == 'EMPLOYER' or current_user.user_role.name == 'ADMIN' %}
                         <li>
                             <a class="dropdown-item" href="/jobs">
@@ -69,7 +71,7 @@
                 </div>
                 {% else %}
                 <a href="/login" class="btn btn-link text-decoration-none text-dark fw-medium px-3">Đăng nhập</a>
-                <a href="/register" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Đăng ký ngay</a>
+                <a href="/register" class="btn btn-jobhub rounded-pill px-4 fw-bold shadow-sm">Đăng ký ngay</a>
                 {% endif %}
             </div>
         </div>

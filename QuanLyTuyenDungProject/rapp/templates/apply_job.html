@@ -4,25 +4,40 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
+            <div class="apply-card">
+                <div class="card-header bg-jobhub text-white">
                     <h4 class="mb-0">Tải hồ sơ ứng tuyển</h4>
                 </div>
-                <div class="card-body">
-                    <h5>Vị trí: <span class="text-primary">{{ job.title }}</span></h5>
+                <div class="apply-body">
+                    <h5>Vị trí: <span class="text-jobhub">{{ job.title }}</span></h5>
                     <hr>
-                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-danger alert-dismissible fade show">
+                                    <i class="bi bi-exclamation-circle me-2"></i>{{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                     <form action="{{ url_for('apply_job_process', job_id=job.id) }}" method="post" enctype="multipart/form-data">
                         <div class="mb-4">
-                            <label for="cv_file" class="form-label fw-bold">Chọn file CV của bạn:</label>
-                            <input type="file" name="cv_file" id="cv_file" class="form-control" accept=".pdf" required>
-                            <div class="form-text text-danger">
-                                * Yêu cầu: Định dạng PDF, dung lượng không quá 10MB.
+                            <label class="form-label fw-bold">Hồ sơ CV của bạn</label>
+                            <div class="upload-area" onclick="document.getElementById('cv_file').click()">
+                                <div class="upload-icon mb-2">
+                                    <i class="bi bi-cloud-arrow-up-fill" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                </div>
+                                <p class="mb-1 fw-bold">Nhấn để tải lên hoặc kéo thả file vào đây</p>
+                                <p class="text-muted small">Hỗ trợ định dạng .pdf (Tối đa 10MB)</p>
+                                <input type="file" name="cv_file" id="cv_file" class="d-none" accept=".pdf" required
+                                       onchange="updateFileName(this)">
                             </div>
-                        </div>
 
+                            <div id="file-name-display" class="mt-2 text-jobhub fw-bold small"></div>
+                        </div>
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Xác nhận nộp hồ sơ</button>
+                            <button type="submit" class="btn btn-apply-now">Xác nhận nộp hồ sơ</button>
                             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Hủy bỏ</a>
                         </div>
                     </form>
@@ -31,4 +46,13 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateFileName(input) {
+    const display = document.getElementById('file-name-display');
+    if (input.files && input.files[0]) {
+        display.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Đã chọn: ${input.files[0].name}`;
+    }
+}
+</script>
 {% endblock %}

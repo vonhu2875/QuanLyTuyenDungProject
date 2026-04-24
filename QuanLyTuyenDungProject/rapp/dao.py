@@ -6,7 +6,7 @@ from sqlite3 import IntegrityError
 import unicodedata
 from sqlalchemy import func
 
-from rapp.models import Category, Job, User, UserRole, Application
+from rapp.models import Category, Job, User, UserRole, Application, AppStatus
 from flask import current_app
 import cloudinary.uploader
 from rapp import db
@@ -239,3 +239,64 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
 
 def get_job_by_id(job_id):
     return Job.query.get(job_id)
+
+#=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
+
+def get_application_by_id(app_id):
+    return Application.query.get(app_id)
+
+def get_applications_by_job(job_id):
+    return Application.query.filter_by(job_id=job_id).all()
+
+def get_my_applications(candidate_id):
+    return Application.query.filter_by(candidate_id=candidate_id).all()
+
+def update_application_status(app_id, new_status, updater_id, updater_role):
+    # 1. Tìm hồ sơ
+    application = Application.query.get(app_id)
+    if not application:
+        raise ValidationError("Hồ sơ không tồn tại!")
+
+    # 2. Phân quyền
+    if updater_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+        raise ValidationError("Bạn không có quyền cập nhật hồ sơ!")
+
+    job = Job.query.get(application.job_id)
+
+    # EMPLOYER chỉ được cập nhật hồ sơ thuộc job của mình
+    if updater_role == UserRole.EMPLOYER and (not job or job.employer_id != updater_id):
+        raise ValidationError("Bạn không có quyền cập nhật hồ sơ này!")
+
+    # 3. Kiểm tra job còn hoạt động (ràng buộc f)
+    if not job or not job.active:
+        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn hoạt động!")
+
+    # Parse new_status từ string sang enum
+    if isinstance(new_status, str):
+        try:
+            new_status = AppStatus[new_status]
+        except KeyError:
+            raise ValidationError("Trạng thái không hợp lệ!")
+
+    current_status = application.status
+
+    # 4. SUBMITTED → ACCEPTED phải qua INTERVIEW trước (ràng buộc e)
+    if current_status == AppStatus.SUBMITTED and new_status == AppStatus.ACCEPTED:
+        raise ValidationError("Phải chuyển qua trạng thái Phỏng vấn trước!")
+
+    # 5. REJECTED → INTERVIEW không được phép (ràng buộc c — kiểm tra trước terminal state)
+    if current_status == AppStatus.REJECTED and new_status == AppStatus.INTERVIEW:
+        raise ValidationError("Không thể chuyển từ Từ chối sang Phỏng vấn!")
+
+    # 6. Trạng thái cuối không thể thay đổi (ràng buộc d)
+    if current_status in [AppStatus.ACCEPTED, AppStatus.REJECTED]:
+        raise ValidationError("Hồ sơ đã ở trạng thái cuối, không thể thay đổi!")
+
+    application.status = new_status
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise Exception("Lỗi hệ thống: " + str(e))
+    return application
+

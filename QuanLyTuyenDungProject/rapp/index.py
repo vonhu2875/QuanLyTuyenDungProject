@@ -144,6 +144,72 @@ def apply_job_process(job_id):
     except (ValidationError, DuplicateError) as ex:
         job = dao.get_job_by_id(job_id)
         return render_template('apply_job.html', err_msg=str(ex), job=job)
+    
+#=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
+
+# Danh sách hồ sơ ứng tuyển (EMPLOYER/ADMIN)
+@app.route('/jobs/<int:job_id>/applications')
+@login_required
+def job_applications(job_id):
+    if current_user.user_role == UserRole.CANDIDATE:
+        return redirect(url_for('my_applications'))
+
+    job = dao.get_job_by_id(job_id)
+    if not job:
+        flash("Tin tuyển dụng không tồn tại.", "danger")
+        return redirect(url_for('index'))
+
+    if current_user.user_role == UserRole.EMPLOYER and job.employer_id != current_user.id:
+        flash("Bạn không có quyền xem hồ sơ này.", "danger")
+        return redirect(url_for('index'))
+
+    applications = dao.get_applications_by_job(job_id)
+    return render_template('applications.html', applications=applications, job=job)
+
+
+# Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
+@app.route('/applications/<int:app_id>/status', methods=['POST'])
+@login_required
+def update_status(app_id):
+    if current_user.user_role == UserRole.CANDIDATE:
+        flash("Bạn không có quyền thực hiện thao tác này.", "danger")
+        return redirect(url_for('index'))
+
+    application = dao.get_application_by_id(app_id)
+    if not application:
+        flash("Hồ sơ không tồn tại.", "danger")
+        return redirect(url_for('index'))
+
+    job_id = application.job_id
+    new_status = request.form.get('status')
+    try:
+        dao.update_application_status(
+            app_id=app_id,
+            new_status=new_status,
+            updater_id=current_user.id,
+            updater_role=current_user.user_role
+        )
+        flash("Cập nhật trạng thái thành công!", "success")
+        return redirect(url_for('job_applications', job_id=job_id))
+    except ValidationError as val:
+        applications = dao.get_applications_by_job(job_id)
+        job = dao.get_job_by_id(job_id)
+        return render_template('applications.html', applications=applications, job=job, err_msg=str(val))
+    except Exception as ex:
+        applications = dao.get_applications_by_job(job_id)
+        job = dao.get_job_by_id(job_id)
+        return render_template('applications.html', applications=applications, job=job, err_msg=str(ex))
+
+
+# Hồ sơ của tôi (CANDIDATE)
+@app.route('/my-applications')
+@login_required
+def my_applications():
+    if current_user.user_role != UserRole.CANDIDATE:
+        return redirect(url_for('index'))
+    applications = dao.get_my_applications(current_user.id)
+    return render_template('my_applications.html', applications=applications)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

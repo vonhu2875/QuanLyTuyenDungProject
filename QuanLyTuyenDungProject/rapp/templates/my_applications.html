@@ -1,0 +1,76 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Hồ sơ đã nộp của tôi</h2>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Trang chủ
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if applications %}
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Vị trí ứng tuyển</th>
+                        <th>Ngày nộp</th>
+                        <th>Trạng thái</th>
+                        <th>CV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="ps-4 text-muted">{{ loop.index }}</td>
+                        <td>
+                            <a href="{{ url_for('job_detail', job_id=app.job_id) }}" class="fw-medium text-decoration-none">
+                                {{ app.job.title }}
+                            </a>
+                        </td>
+                        <td class="text-muted">{{ app.created_date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if app.status.name == 'SUBMITTED' %}
+                                <span class="badge bg-secondary">Chờ duyệt</span>
+                            {% elif app.status.name == 'INTERVIEW' %}
+                                <span class="badge bg-primary">Phỏng vấn</span>
+                            {% elif app.status.name == 'ACCEPTED' %}
+                                <span class="badge bg-success">Trúng tuyển</span>
+                            {% elif app.status.name == 'REJECTED' %}
+                                <span class="badge bg-danger">Từ chối</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ app.cv_path }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Xem CV
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted mt-2">Tổng: {{ applications|length }} hồ sơ đã nộp</p>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-inbox me-2"></i>Bạn chưa nộp hồ sơ nào.
+        <a href="{{ url_for('index') }}" class="alert-link">Tìm việc ngay!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

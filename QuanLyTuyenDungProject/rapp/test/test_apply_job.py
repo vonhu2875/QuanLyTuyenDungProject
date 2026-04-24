@@ -12,7 +12,8 @@ from rapp.test.test_base import test_session, test_app, job_to_apply, sample_cat
 # Hàm tiện ích để tạo file giả lập trong bộ nhớ
 def create_mock_file(filename, content=b"fake content", size=None):
     if size:
-        content = b"0" * size
+        # Nếu test dung lượng lớn, vẫn phải đảm bảo 4 byte đầu là %PDF
+        content = b"%PDF" + b"0" * (size - 4)
     file = io.BytesIO(content)
     file.filename = filename
     return file
@@ -21,7 +22,7 @@ def create_mock_file(filename, content=b"fake content", size=None):
 # 1. TEST NỘP THÀNH CÔNG
 def test_apply_success(test_session, job_to_apply, sample_candidate):
     # 1. Giả lập file PDF
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
 
     # 2. Bắt đầu giả lập Cloudinary
     with patch('cloudinary.uploader.upload') as mock_upload:
@@ -43,7 +44,7 @@ def test_apply_success(test_session, job_to_apply, sample_candidate):
 
 # 2. TEST SAI VAI TRÒ (Nhà tuyển dụng nộp hồ sơ)
 def test_apply_invalid_role(test_session, job_to_apply, sample_employer):
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
     # Dùng sample_employer (ID của nhà tuyển dụng) để nộp thử
     with pytest.raises(ValidationError, match="Chỉ Ứng viên mới có quyền nộp hồ sơ!"):
         apply_for_job(
@@ -56,7 +57,7 @@ def test_apply_invalid_role(test_session, job_to_apply, sample_employer):
 # 3. TEST SAI ĐỊNH DẠNG FILE (Nộp file Word)
 def test_apply_invalid_file_type(test_session, job_to_apply, sample_candidate):
     # Giả lập file .jpg hoặc .docx
-    cv = create_mock_file("my_cv.jpg")
+    cv = create_mock_file("my_cv.jpg", content=b"%PDF-1.5 test content")
 
     with pytest.raises(ValidationError, match="Hệ thống chỉ chấp nhận file định dạng .pdf"):
         apply_for_job(
@@ -70,7 +71,8 @@ def test_apply_invalid_file_type(test_session, job_to_apply, sample_candidate):
 # 4. TEST FILE QUÁ DUNG LƯỢNG (Giả lập file 11MB)
 def test_apply_file_too_large(test_session, job_to_apply, sample_candidate):
     # Tạo nội dung file giả lập cực lớn (11MB)
-    large_content = b"0" * (11 * 1024 * 1024)
+    # b"%PDF" chiếm 4 byte, cộng với chuỗi số 0 cho đủ dung lượng
+    large_content = b"%PDF" + b"0" * (11 * 1024 * 1024 - 4)
     cv = create_mock_file("big_cv.pdf", content=large_content)
 
     with pytest.raises(ValidationError, match="Dung lượng file CV tối đa là 10MB!"):
@@ -84,7 +86,7 @@ def test_apply_file_too_large(test_session, job_to_apply, sample_candidate):
 
 # 5. TEST NỘP TRÙNG
 def test_apply_duplicate(test_session, job_to_apply, sample_candidate):
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
 
     with patch('cloudinary.uploader.upload') as mock_upload:
         mock_upload.return_value = {'secure_url': 'https://link-cv.pdf'}
@@ -99,7 +101,7 @@ def test_apply_duplicate(test_session, job_to_apply, sample_candidate):
 
 # 6. TEST TIN ĐÃ ĐÓNG (active = False)
 def test_apply_job_inactive(test_session, job_to_apply, sample_candidate):
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
     # Chuyển trạng thái job sang đóng
     job_to_apply.active = False
     test_session.commit()
@@ -115,7 +117,7 @@ def test_apply_job_inactive(test_session, job_to_apply, sample_candidate):
 
 # 7. TEST TIN HẾT HẠN (Deadline < Now)
 def test_apply_job_expired(test_session, job_to_apply, sample_candidate):
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
     # Chỉnh deadline về quá khứ
     job_to_apply.deadline = datetime.now() - timedelta(days=1)
     test_session.commit()
@@ -139,7 +141,7 @@ def test_apply_empty_file(test_session, job_to_apply, sample_candidate):
 
 # 9. TEST LỖI: Lỗi phát sinh từ phía Cloudinary
 def test_apply_cloudinary_error(test_session, job_to_apply, sample_candidate):
-    cv = create_mock_file("my_cv.pdf")
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5 test content")
 
     with patch('cloudinary.uploader.upload') as mock_upload:
         # Giả lập Cloudinary quăng lỗi kết nối

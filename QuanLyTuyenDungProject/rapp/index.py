@@ -58,7 +58,6 @@ def register_view():
 def register_process():
     users_show = [UserRole.EMPLOYER, UserRole.CANDIDATE]
     data = request.form
-
     password = data.get("password")
     confirm = data.get("confirm")
     if password != confirm:
@@ -66,7 +65,7 @@ def register_process():
         return render_template('register.html', err_msg=err_msg,UserRole = users_show)
     try:
         add_user(name=data.get('name'), username=data.get('username'), password=password, avatar=request.files.get('avatar'),
-                 email=data.get('email'), phone=data.get('phone'), user_role=data.get('user_role'))
+                 email=data.get('email'), phone=data.get('phone'), user_role=UserRole[data.get('user_role')])
         return redirect('/login')
     except ValidationError as val:
         return render_template('register.html', err_msg=str(val), UserRole = users_show)

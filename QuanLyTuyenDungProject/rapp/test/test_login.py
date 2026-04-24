@@ -27,24 +27,27 @@ def test_empty_password(test_session):
 def test_invalid_username(test_session):
     add_user(name='Võ Thị Bích Như', username='a' * 5, password='4aA' * 3, avatar=None, email='abc@gmail.com',
              phone='0123456789', user_role=UserRole.CANDIDATE)
-    a = auth_user(username='a' * 6, password="4aA" * 3)
-    assert a is None
+    with pytest.raises(ValidationError, match="Sai tên đăng nhập hoặc sai mật khẩu!"):
+        auth_user(username='a' * 6, password="4aA" * 3)
+
 
 def test_invalid_password(test_session):
     add_user(name='Võ Thị Bích Như', username='a' * 5, password='4aA' * 3, avatar=None, email='abc@gmail.com',
              phone='0123456789', user_role=UserRole.CANDIDATE)
-    a = auth_user(username='a' * 5, password="4aA" * 4)
-    assert a is None
+    with pytest.raises(ValidationError, match="Sai tên đăng nhập hoặc sai mật khẩu!"):
+        auth_user(username='a' * 5, password="4aA" * 4)
+
 
 def test_not_exist_user(test_session):
-    a = auth_user(username='a' * 5, password="4aA" * 4)
-    assert a is None
+    with pytest.raises(ValidationError, match="Sai tên đăng nhập hoặc sai mật khẩu!"):
+        auth_user(username='a' * 5, password="4aA" * 4)
 
 
 def test_inactive_user(test_session):
     u = add_user(name='Võ Thị Bích Như', username='a' * 5, password='4aA' * 3, avatar=None, email='abc@gmail.com',
              phone='0123456789', user_role=UserRole.CANDIDATE)
     u.active = False
-    a = auth_user(username='a' * 5, password="4aA" * 3)
-    assert a is None
+    with pytest.raises(ValidationError, match="Tài khoản người dùng không tồn tại!"):
+        auth_user(username='a' * 5, password="4aA" * 3)
+
 

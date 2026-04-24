@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
 import unicodedata
-from flask_login import current_user
 from sqlalchemy import func
 
 from rapp.models import Category, Job, User, UserRole, Application
@@ -28,10 +27,7 @@ def normalize(text=None):
     return text
 
 def load_jobs(cate_id=None, kw=None, page=None):
-    #Thái Hà chỉnh lại dòng này để load những thông tin còn active true
-    #query = Job.query
-    query = Job.query.filter(Job.active.__eq__(True))
-    ###############################
+    query = Job.query
     if cate_id:
         query = query.filter(Job.category_id.__eq__(cate_id))
     jobs = query.all()
@@ -168,10 +164,14 @@ def auth_user(username, password):
         raise ValidationError("Vui lòng nhập username!")
     if not password:
         raise ValidationError("Vui lòng nhập mật khẩu!")
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    u = User.query.filter(User.username == username, User.password == password).first()
-    if u and not u.active:
-        return None
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
+    u = User.query.filter(User.username == username).first()
+    if not u:
+        raise ValidationError("Sai tên đăng nhập hoặc sai mật khẩu!")
+    if password != u.password:
+        raise ValidationError("Sai tên đăng nhập hoặc sai mật khẩu!")
+    if not u.active:
+        raise ValidationError("Tài khoản người dùng không tồn tại!")
     return u
 
 

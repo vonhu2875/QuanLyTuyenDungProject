@@ -25,7 +25,6 @@ from rapp.models import Application, AppStatus, Category, Job, User, UserRole
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
-
 def load_categories():
     return Category.query.all()
 
@@ -62,6 +61,8 @@ def count_jobs(category_id=None):
 
 def add_user(name, username, password, avatar, email, phone, user_role):
     username = username.strip()
+
+    # Kiểm tra username
     if len(username) < 5 or len(username) > 20:
         raise ValidationError("Username phải từ 5 đến 20 ký tự!")
 
@@ -72,18 +73,34 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     if not re.match(r'^[a-zA-Z0-9]+$', username):
         raise  ValidationError("Username không được chứa ký tự đặc biệt")
 
+    # Kiểm tra password
+    if len(password) < 8:
+        raise ValidationError('Password phải ít nhất 8 ký tự')
+    if not re.search(r'[0-9]', password):
+        raise ValidationError('Password phải chứa số')
+    if not re.search(r'[A-Z]', password):
+        raise ValidationError('Password phải chứa ký tự hoa')
+    if not re.search(r'[a-z]', password):
+        raise ValidationError('Password phải chứa ký tự')
+    #Kiểm tra email
     email_regrex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     if not re.match(email_regrex, email):
         raise ValidationError("Email không đúng định dạng!")
 
+    #Kiểm tra name
     if not name or not name.strip():
         raise ValidationError("Vui lòng nhập tên!")
     if len(name) > 255:
         raise ValidationError("Tên không được quá 255 ký tự!")
 
+    #Kiểm tra user_role
     if user_role is None:
         raise ValidationError("Vai trò không được để trống!")
 
+    if user_role not in [UserRole.EMPLOYER, UserRole.CANDIDATE]:
+        raise ValidationError("Vai trò không hợp lệ")
+
+    #Kiểm tra sdt
     if phone is None:
         raise ValidationError("Bắt buộc nhập số điện thoại!")
 
@@ -93,9 +110,11 @@ def add_user(name, username, password, avatar, email, phone, user_role):
     if not re.match(r'^[0-9]+$', phone):
         raise ValidationError("Số điện thoại không hợp lệ!")
 
+    #Kiểm tra phía dưới db username
     if User.query.filter(User.username.__eq__(username)).first():
         raise DuplicateError(f'Username {username} đã tồn tại')
 
+    # Kiểm tra phía dưới db email
     if User.query.filter(User.email.__eq__(email)).first():
         raise DuplicateError(f'Email {email} đã tồn tại')
 
@@ -110,11 +129,14 @@ def add_user(name, username, password, avatar, email, phone, user_role):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        raise Exception("Username đã tồn tại!")
+        raise Exception("Không thể thêm user!")
+    return u
 
-def add_job(title, description, salary, deadline, category_id):
-    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+def add_job(title, description, salary, deadline, category_id, employer_id, user_role):
+    if user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
         raise ValidationError("Bạn không có quyền đăng tin!")
+    if not title:
+        raise ValidationError("Phải có tiêu đề!")
     title = title.strip()
     if len(title) < 10:
         raise ValidationError("Tiêu đề phải tối thiểu 10 ký tự!")
@@ -128,23 +150,26 @@ def add_job(title, description, salary, deadline, category_id):
     if salary <= 0:
         raise ValidationError("Lương phải > 0!")
     now = datetime.now()
-    if deadline.date() < now.date():
+    if deadline < now:
         raise ValidationError("Deadline phải lớn hơn ngày tháng năm hiện tại!")
-    if deadline.date() > now.date() + timedelta(days=365):
+    if deadline > now + timedelta(days=365):
         raise ValidationError("Hạn deadline chỉ tối đa 1 năm kể từ ngày tạo tin!")
     deadline = deadline.replace(hour=23, minute=59, second=59)
-    if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == current_user.id).first():
+    if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == employer_id).first():
         raise DuplicateError("Tin tuyển dụng đã tồn tại!")
 
-    j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=current_user.id)
+    j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=employer_id)
     db.session.add(j)
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         raise Exception("Không thể tải Job lên!")
+    return j
 
 def auth_user(username, password):
+    if not username:
+        raise ValidationError("Vui lòng nhập username!")
     if not password:
         raise ValidationError("Vui lòng nhập mật khẩu!")
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())

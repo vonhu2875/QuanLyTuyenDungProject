@@ -97,7 +97,7 @@ def create_job():
     deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
     category_id = int(data.get('category_id'))
     try:
-        add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id)
+        add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id, employer_id=current_user.id,user_role = current_user.user_role)
         return redirect('/')
     except ValidationError as val:
         return render_template('job.html', err_msg=str(val), categories=categories)

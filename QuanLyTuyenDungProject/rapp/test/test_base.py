@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytest
+import hashlib
 from cloudinary import uploader
 from flask import Flask
 from rapp import db
-from rapp.models import Job
+from rapp.models import Job, User, UserRole, Category
 
 def create_app():
     app = Flask(__name__)
@@ -63,3 +64,58 @@ def mock_cloudinary(monkeypatch):
     def fake_upload(file):
         return {'secure_url': 'https://fake-avatar.png'}
     monkeypatch.setattr('cloudinary.uploader.upload', fake_upload)
+
+
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
+
+@pytest.fixture
+def sample_category(test_session):
+    cate = Category(name="Công nghệ thông tin")
+    test_session.add(cate)
+    test_session.commit()
+    return cate
+
+@pytest.fixture
+def sample_candidate(test_session):
+    pwd = str(hashlib.md5("123".encode('utf-8')).hexdigest())
+    candidate = User(
+        name="Nguyễn Văn Hà",
+        username="candidate_test",
+        password=pwd,
+        email="ha_candidate@gmail.com",
+        phone="0909123456",
+        user_role=UserRole.CANDIDATE
+    )
+    test_session.add(candidate)
+    test_session.commit()
+    return candidate
+
+@pytest.fixture
+def sample_employer(test_session):
+    pwd = str(hashlib.md5("123".encode('utf-8')).hexdigest())
+    employer = User(
+        name="Công ty Group 10",
+        username="employer_test",
+        password=pwd,
+        email="group10@gmail.com",
+        phone="0909888777",
+        user_role=UserRole.EMPLOYER
+    )
+    test_session.add(employer)
+    test_session.commit()
+    return employer
+
+@pytest.fixture
+def job_to_apply(test_session, sample_category, sample_employer):
+    job = Job(
+        title="Lập trình viên Python Test",
+        description="Mô tả công việc kiểm thử",
+        salary=15000000,
+        deadline=datetime.now() + timedelta(days=10),
+        category_id=sample_category.id,
+        employer_id=sample_employer.id,
+        active=True
+    )
+    test_session.add(job)
+    test_session.commit()
+    return job

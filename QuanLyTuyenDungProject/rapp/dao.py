@@ -175,7 +175,7 @@ def auth_user(username, password):
     return u
 
 
-#=========================Nghiệp vụ 2: Bé Hà==========================
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 
 def apply_for_job(job_id, candidate_id, user_role, cv_file):
@@ -209,6 +209,14 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     ext = os.path.splitext(cv_file.filename)[1].lower()
     if ext != '.pdf':
         raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
+
+    # Kiểm tra nội dung thực
+    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
+    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
+
+    # %PDF tương ứng với b'\x25\x50\x44\x46'
+    if header != b'%PDF':
+        raise ValidationError("Nội dung file không phải là PDF hợp lệ!")
 
     # Kiểm tra dung lượng (0 < size <= 10MB)
     blob = cv_file.read()

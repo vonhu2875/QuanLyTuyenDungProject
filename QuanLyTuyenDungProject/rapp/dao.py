@@ -175,7 +175,7 @@ def auth_user(username, password):
     return u
 
 
-#=========================Nghiệp vụ 2: Bé Hà==========================
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 
 def apply_for_job(job_id, candidate_id, user_role, cv_file):
@@ -186,7 +186,7 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
         raise ValidationError("Chỉ Ứng viên mới có quyền nộp hồ sơ!")
 
     # 2. Kiểm tra tin tuyển dụng
-    job = Job.query.get(job_id)
+    job = db.session.get(Job, job_id)
     if not job:
         raise ValidationError("Tin tuyển dụng không tồn tại!")
 
@@ -205,11 +205,6 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     if not cv_file or cv_file.filename == '':
         raise ValidationError("Vui lòng tải lên CV của bạn!")
 
-    # Kiểm tra đuôi file (Chỉ nhận .pdf)
-    ext = os.path.splitext(cv_file.filename)[1].lower()
-    if ext != '.pdf':
-        raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
-
     # Kiểm tra dung lượng (0 < size <= 10MB)
     blob = cv_file.read()
     size = len(blob)
@@ -219,6 +214,19 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
         raise ValidationError("File CV không được để trống!")
     if size > 10 * 1024 * 1024:  # 10MB
         raise ValidationError("Dung lượng file CV tối đa là 10MB!")
+
+    # Kiểm tra đuôi file (Chỉ nhận .pdf)
+    ext = os.path.splitext(cv_file.filename)[1].lower()
+    if ext != '.pdf':
+        raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
+
+    # Kiểm tra nội dung thực
+    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
+    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
+
+    # %PDF tương ứng với b'\x25\x50\x44\x46'
+    if header != b'%PDF':
+        raise ValidationError("Nội dung file không phải là PDF hợp lệ!")
 
     # 5. Lưu hồ sơ
     try:

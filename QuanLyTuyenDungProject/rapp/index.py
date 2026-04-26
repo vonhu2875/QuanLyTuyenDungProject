@@ -110,7 +110,7 @@ def create_job():
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
 
-#=========================Nghiệp vụ 2: Bé Hà==========================
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 # JOB DETAILS
 @app.route('/jobs/<int:job_id>')

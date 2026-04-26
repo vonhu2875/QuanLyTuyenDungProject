@@ -32,24 +32,37 @@
                         <h5>Sẵn sàng ứng tuyển?</h5>
                         <p class="small text-muted">Lưu ý: Chỉ chấp nhận file định dạng .pdf (Tối đa 10MB)</p>
 
-                        {% if current_user.is_authenticated %}
-                            {% if current_user.user_role.name == 'CANDIDATE' %}
-                                <a href="{{ url_for('apply_upload_view', job_id=job.id) }}" class="btn btn-jobhub btn-lg w-100">
-                                    Ứng tuyển ngay
-                                </a>
-                            {% elif current_user.user_role.name == 'ADMIN' or (current_user.user_role.name == 'EMPLOYER' and current_user.id == job.employer_id) %}
-                                <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-info btn-lg w-100">
-                                    <i class="bi bi-people me-2"></i>Xem hồ sơ ứng tuyển
-                                </a>
+                        {% if job.active %}
+                            {# CHỈ XỬ LÝ KHI TIN ĐANG MỞ #}
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.user_role.name == 'CANDIDATE' %}
+                                    <a href="{{ url_for('apply_upload_view', job_id=job.id) }}" class="btn btn-jobhub btn-lg w-100 fw-bold rounded-pill shadow-sm">
+                                        Ứng tuyển ngay
+                                    </a>
+                                {% elif current_user.user_role.name == 'ADMIN' or (current_user.user_role.name == 'EMPLOYER' and current_user.id == job.employer_id) %}
+                                    <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-info btn-lg w-100 fw-bold rounded-pill">
+                                        <i class="bi bi-people me-2"></i>Xem hồ sơ ứng tuyển
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary w-100 rounded-pill" disabled>
+                                        Chỉ Ứng viên mới được nộp
+                                    </button>
+                                {% endif %}
                             {% else %}
-                                <button class="btn btn-secondary w-100" disabled>
-                                    Chỉ Ứng viên mới được nộp
-                                </button>
+                                <a href="{{ url_for('login_view', next=request.path) }}" class="btn btn-warning w-100 fw-bold rounded-pill">
+                                    Đăng nhập để ứng tuyển
+                                </a>
                             {% endif %}
                         {% else %}
-                            <a href="{{ url_for('login_view', next=request.path) }}" class="btn btn-warning w-100">
-                                Đăng nhập để ứng tuyển
-                            </a>
+                            {# HIỂN THỊ KHI TIN ĐÃ ĐÓNG #}
+                            <div class="alert alert-danger mb-0 rounded-4 shadow-sm">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Tin đã đóng!</strong>
+                                <p class="small mb-0 mt-1">Vị trí này hiện không còn nhận hồ sơ ứng tuyển.</p>
+                            </div>
+                            <button class="btn btn-secondary btn-lg w-100 mt-3 rounded-pill" disabled>
+                                Ngừng nhận hồ sơ
+                            </button>
                         {% endif %}
                     </div>
                 </div>

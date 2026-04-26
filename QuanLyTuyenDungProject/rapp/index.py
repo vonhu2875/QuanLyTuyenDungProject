@@ -5,10 +5,11 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from unicodedata import category
 
-from rapp import dao, app, login
+from rapp import dao, app, login, db
 from rapp.dao import add_user, add_job
 from rapp.exceptions import ValidationError, DuplicateError
-from rapp.models import User, UserRole
+from rapp.models import User, UserRole, Job, Category
+
 
 #TRANG CHỦ
 @app.route('/')
@@ -216,5 +217,68 @@ def my_applications():
     return render_template('my_applications.html', applications=applications)
 
 
+#=========================Ngại và Hiền (Bé Hà)==========================
+
+# Liên hệ (Contact)
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+# Quản lý tin đăng
+@app.route('/manage_jobs')
+@login_required
+def manage_jobs():
+    if current_user.user_role.name not in ['EMPLOYER', 'ADMIN']:
+        return redirect('/')
+
+    user_jobs = current_user.jobs
+
+    return render_template('manage_jobs.html',
+                           jobs=user_jobs,
+                           now=datetime.now())
+
+#Tính năng đóng/mở tin
+@app.route('/toggle_job_status/<int:job_id>', methods=['POST'])
+@login_required
+def toggle_status(job_id):
+    if dao.toggle_job_active(job_id):
+        return redirect(url_for('manage_jobs'))
+    return "Lỗi: Không tìm thấy tin đăng", 404
+
+#Xóa tin
+@app.route('/delete_job/<int:job_id>', methods=['POST'])
+@login_required
+def delete_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    if job.employer_id == current_user.id:
+        db.session.delete(job)
+        db.session.commit()
+    return redirect(url_for('manage_jobs'))
+
+#Sửa tin
+@app.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def edit_job(job_id):
+    job = Job.query.get_or_404(job_id)
+
+    if request.method == 'POST':
+        if dao.update_job(job_id, request.form):
+            return redirect(url_for('manage_jobs'))
+
+    categories = dao.get_categories()
+    return render_template('edit_job.html', job=job, categories=categories)
+
+#Hồ sơ cá nhân
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        if dao.update_user_profile(current_user.id, request.form):
+            flash("Cập nhật hồ sơ thành công!", "success")
+            return redirect(url_for('profile'))
+
+    return render_template('profile.html')
+
+#========================================================================
 if __name__ == "__main__":
     app.run(debug=True)

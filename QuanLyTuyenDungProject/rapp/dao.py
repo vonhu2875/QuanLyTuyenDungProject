@@ -308,3 +308,48 @@ def update_application_status(app_id, new_status, updater_id, updater_role):
         raise Exception("Lỗi hệ thống: " + str(e))
     return application
 
+
+
+#==================================Ngại và Hiền (Bé Hà)==================================
+
+def get_categories():
+    return Category.query.all()
+
+
+def toggle_job_active(job_id):
+    job = Job.query.get(job_id)
+    if job:
+        # Sử dụng cột active có sẵn trong BaseModel
+        job.active = not job.active
+        db.session.commit()
+        return True
+    return False
+
+
+def update_job(job_id, data):
+    job = Job.query.get(job_id)
+    if job:
+        job.title = data.get('title')
+        job.description = data.get('description')
+        job.salary = float(data.get('salary', 0))
+        job.category_id = int(data.get('category'))
+
+        # Xử lý ngày tháng
+        deadline_str = data.get('deadline')
+        if deadline_str:
+            job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+
+        db.session.commit()
+        return True
+    return False
+
+def update_user_profile(user_id, data):
+    user = User.query.get(user_id)
+    if user:
+        user.name = data.get('name')
+        user.email = data.get('email')
+        user.phone = data.get('phone')
+
+        db.session.commit()
+        return True
+    return False

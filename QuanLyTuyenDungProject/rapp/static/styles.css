@@ -181,19 +181,41 @@ html, body {
     margin: 0;
 }
 
-/* Biến body thành container Flexbox theo chiều dọc */
 body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
-/* Phần nội dung chính (giữa Header và Footer) sẽ tự phình ra chiếm hết chỗ trống */
 main, .main-content {
     flex: 1 0 auto;
 }
 
-/* Đảm bảo Footer không bị co lại */
 footer {
     flex-shrink: 0;
+}
+
+/* Manage Job*/
+.btn-white { background: #fff; }
+.btn-white:hover { background: #f8f9fa; }
+.table thead th { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* My Application*/
+.table thead th {
+    border-top: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.table tbody tr {
+    transition: all 0.2s;
+}
+.table tbody tr:hover {
+    background-color: #fcfaff !important;
+}
+.extra-small {
+    font-size: 0.75rem;
+}
+.bg-jobhub {
+    background-color: var(--primary-color) !important;
+    color: white !important;
 }

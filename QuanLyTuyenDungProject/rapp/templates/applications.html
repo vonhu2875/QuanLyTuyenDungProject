@@ -60,7 +60,7 @@
                             {% if app.status.name == 'SUBMITTED' %}
                                 <span class="badge bg-secondary">Chờ duyệt</span>
                             {% elif app.status.name == 'INTERVIEW' %}
-                                <span class="badge bg-primary">Phỏng vấn</span>
+                                <span class="badge bg-jobhub">Phỏng vấn</span>
                             {% elif app.status.name == 'ACCEPTED' %}
                                 <span class="badge bg-success">Trúng tuyển</span>
                             {% elif app.status.name == 'REJECTED' %}
@@ -85,7 +85,7 @@
                                         <option value="REJECTED">Từ chối</option>
                                     {% endif %}
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
+                                <button type="submit" class="btn btn-sm btn-jobhub">Lưu</button>
                             </form>
                             {% else %}
                                 <span class="text-muted small">Đã kết thúc</span>

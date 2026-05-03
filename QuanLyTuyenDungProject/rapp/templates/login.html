@@ -5,13 +5,11 @@
 {% block content %}
 <div class="container mt-5 mb-5" style="max-width: 500px;"> <div class="text-center mb-4">
         <h2 class="text-jobhub fw-bold">ĐĂNG NHẬP HỆ THỐNG</h2>
-        <p class="text-muted small">Chào mừng bạn quay trở lại với JobHub</p>
     </div>
 
     {% if err_msg %}
     <div class="alert alert-danger alert-dismissible fade show">
         <i class="bi bi-exclamation-triangle me-2"></i>{{err_msg}}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endif %}
 
@@ -24,8 +22,7 @@
                     <input type="text"
                            class="form-control"
                            id="username" name="username"
-                           placeholder="Nhập tên đăng nhập..."
-                           required>
+                           placeholder="Nhập tên đăng nhập...">
                 </div>
 
                 <div class="mb-4">
@@ -33,8 +30,7 @@
                     <input type="password"
                            class="form-control"
                            id="password" name="password"
-                           placeholder="Nhập mật khẩu..."
-                           required>
+                           placeholder="Nhập mật khẩu...">
                 </div>
 
                 <div class="d-grid mt-5">

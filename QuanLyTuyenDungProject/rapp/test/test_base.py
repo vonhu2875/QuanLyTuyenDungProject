@@ -27,6 +27,10 @@ def test_app():
         db.drop_all()
 
 @pytest.fixture
+def test_client(test_app):
+    return test_app.test_client()
+
+@pytest.fixture
 def test_session(test_app):
     yield db.session
     db.session.rollback()

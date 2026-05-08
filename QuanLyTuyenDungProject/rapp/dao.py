@@ -205,6 +205,10 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     if not cv_file or cv_file.filename == '':
         raise ValidationError("Vui lòng tải lên CV của bạn!")
 
+    # Kiểm tra nội dung thực
+    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
+    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
+
     # Kiểm tra dung lượng (0 < size <= 10MB)
     blob = cv_file.read()
     size = len(blob)
@@ -219,10 +223,6 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     ext = os.path.splitext(cv_file.filename)[1].lower()
     if ext != '.pdf':
         raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
-
-    # Kiểm tra nội dung thực
-    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
-    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
 
     # %PDF tương ứng với b'\x25\x50\x44\x46'
     if header != b'%PDF':

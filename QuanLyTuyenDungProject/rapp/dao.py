@@ -248,6 +248,27 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
 def get_job_by_id(job_id):
     return Job.query.get(job_id)
 
+def check_applied(candidate_id, job_id):
+    from rapp.models import Application
+    return (Application.query
+                        .filter_by(candidate_id=candidate_id, job_id=job_id)
+                        .first() is not None)
+
+def update_user_profile(user_id, data):
+    user = User.query.get(user_id)
+    if user:
+        user.name = data.get('name')
+        user.email = data.get('email')
+        user.phone = data.get('phone')
+
+        db.session.commit()
+        return True
+    return False
+
+def get_my_applications(candidate_id):
+    return Application.query.filter_by(candidate_id=candidate_id).all()
+
+
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 def get_application_by_id(app_id):
@@ -255,9 +276,6 @@ def get_application_by_id(app_id):
 
 def get_applications_by_job(job_id):
     return Application.query.filter_by(job_id=job_id).all()
-
-def get_my_applications(candidate_id):
-    return Application.query.filter_by(candidate_id=candidate_id).all()
 
 def update_application_status(app_id, new_status, updater_id, updater_role):
     # 1. Tìm hồ sơ
@@ -309,9 +327,6 @@ def update_application_status(app_id, new_status, updater_id, updater_role):
     return application
 
 
-
-#==================================Ngại và Hiền (Bé Hà)==================================
-
 def get_categories():
     return Category.query.all()
 
@@ -343,13 +358,3 @@ def update_job(job_id, data):
         return True
     return False
 
-def update_user_profile(user_id, data):
-    user = User.query.get(user_id)
-    if user:
-        user.name = data.get('name')
-        user.email = data.get('email')
-        user.phone = data.get('phone')
-
-        db.session.commit()
-        return True
-    return False

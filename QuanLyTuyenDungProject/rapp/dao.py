@@ -269,6 +269,7 @@ def get_my_applications(candidate_id):
     return Application.query.filter_by(candidate_id=candidate_id).all()
 
 
+
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 def get_application_by_id(app_id):

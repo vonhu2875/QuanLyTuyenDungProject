@@ -7,6 +7,7 @@ from flask import Flask
 from rapp import db
 from rapp.models import Job, User, UserRole, Category
 from rapp.index import register_routes_nv1, register_routes_nv2
+
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'

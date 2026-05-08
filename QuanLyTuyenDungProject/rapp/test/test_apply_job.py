@@ -130,7 +130,6 @@ def test_apply_job_expired(test_session, job_to_apply, sample_candidate):
             cv_file=cv
         )
 
-
 # 8. TEST LỖI: Tên file hợp lệ nhưng nội dung file trống (0 bytes)
 def test_apply_empty_file(test_session, job_to_apply, sample_candidate):
     cv = create_mock_file("empty.pdf", content=b"")  # File không có nội dung
@@ -168,7 +167,6 @@ def test_apply_spoofed_file(test_session, job_to_apply, sample_candidate):
             user_role=sample_candidate.user_role,
             cv_file=cv
         )
-
 
 # 11. TEST LỖI: File có ký tự đặc biệt trong tên
 def test_apply_filename_special_chars(test_session, job_to_apply, sample_candidate):

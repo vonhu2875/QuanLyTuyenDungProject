@@ -24,7 +24,7 @@ def test_api_view_profile(test_client, mocker):
     assert "Nguyễn Văn Hà" in res.get_data(as_text=True)
 
 
-# TEST XEM CHI TIẾT VIỆC LÀM
+# 2. TEST XEM CHI TIẾT VIỆC LÀM
 def test_api_get_job_detail_success(test_client, mocker):
     class FakeUser():
         is_authenticated = True

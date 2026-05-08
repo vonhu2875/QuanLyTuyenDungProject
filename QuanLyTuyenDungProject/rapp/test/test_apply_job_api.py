@@ -105,7 +105,7 @@ def test_api_apply_job_unauthorized(test_client, mocker):
     args, kwargs = mock_render.call_args
     assert "Chỉ Ứng viên mới có quyền nộp hồ sơ!" in kwargs['err_msg']
 
-# 4. TEST XEM CHI TIẾT VIỆC LÀM
+# 4. TEST XEM CHI TIẾT CÔNG VIỆC
 def test_api_get_job_detail_success(test_client, mocker):
     class FakeUser():
         is_authenticated = True

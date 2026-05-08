@@ -6,6 +6,7 @@ from rapp.test.test_base import test_session, job_to_apply, sample_candidate, te
 
 
 
+
 # 1. Kiểm tra lấy job thành công
 def test_get_job_by_id_success(test_session, job_to_apply):
     job = dao.get_job_by_id(job_to_apply.id)

@@ -113,8 +113,9 @@ def load_user(user_id):
 
 #=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
-# JOB DETAILS
+
 def register_routes_nv2(app):
+    # Chi tiết công việc
     @app.route('/jobs/<int:job_id>')
     def job_detail(job_id):
         job = dao.get_job_by_id(job_id)
@@ -158,7 +159,7 @@ def register_routes_nv2(app):
         # 2. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
         return render_template('apply_job.html', job=job)
 
-    # Liên hệ (Contact)
+    # Liên hệ
     @app.route('/contact')
     def contact():
         return render_template('contact.html')

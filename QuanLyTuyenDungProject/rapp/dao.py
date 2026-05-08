@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 
 import unicodedata
-from flask_login import current_user
 from sqlalchemy import func
 
 from rapp.models import Category, Job, User, UserRole, Application, AppStatus
@@ -28,10 +27,7 @@ def normalize(text=None):
     return text
 
 def load_jobs(cate_id=None, kw=None, page=None):
-    #Thái Hà chỉnh lại dòng này để load những thông tin còn active true
-    #query = Job.query
-    query = Job.query.filter(Job.active.__eq__(True))
-    ###############################
+    query = Job.query
     if cate_id:
         query = query.filter(Job.category_id.__eq__(cate_id))
     jobs = query.all()
@@ -168,14 +164,18 @@ def auth_user(username, password):
         raise ValidationError("Vui lòng nhập username!")
     if not password:
         raise ValidationError("Vui lòng nhập mật khẩu!")
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    u = User.query.filter(User.username == username, User.password == password).first()
-    if u and not u.active:
-        return None
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
+    u = User.query.filter(User.username == username).first()
+    if not u:
+        raise ValidationError("Sai tên đăng nhập hoặc sai mật khẩu!")
+    if password != u.password:
+        raise ValidationError("Sai tên đăng nhập hoặc sai mật khẩu!")
+    if not u.active:
+        raise ValidationError("Tài khoản người dùng không tồn tại!")
     return u
 
 
-#=========================Nghiệp vụ 2: Bé Hà==========================
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 
 def apply_for_job(job_id, candidate_id, user_role, cv_file):
@@ -186,7 +186,7 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
         raise ValidationError("Chỉ Ứng viên mới có quyền nộp hồ sơ!")
 
     # 2. Kiểm tra tin tuyển dụng
-    job = Job.query.get(job_id)
+    job = db.session.get(Job, job_id)
     if not job:
         raise ValidationError("Tin tuyển dụng không tồn tại!")
 
@@ -205,11 +205,6 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     if not cv_file or cv_file.filename == '':
         raise ValidationError("Vui lòng tải lên CV của bạn!")
 
-    # Kiểm tra đuôi file (Chỉ nhận .pdf)
-    ext = os.path.splitext(cv_file.filename)[1].lower()
-    if ext != '.pdf':
-        raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
-
     # Kiểm tra dung lượng (0 < size <= 10MB)
     blob = cv_file.read()
     size = len(blob)
@@ -219,6 +214,19 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
         raise ValidationError("File CV không được để trống!")
     if size > 10 * 1024 * 1024:  # 10MB
         raise ValidationError("Dung lượng file CV tối đa là 10MB!")
+
+    # Kiểm tra đuôi file (Chỉ nhận .pdf)
+    ext = os.path.splitext(cv_file.filename)[1].lower()
+    if ext != '.pdf':
+        raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
+
+    # Kiểm tra nội dung thực
+    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
+    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
+
+    # %PDF tương ứng với b'\x25\x50\x44\x46'
+    if header != b'%PDF':
+        raise ValidationError("Nội dung file không phải là PDF hợp lệ!")
 
     # 5. Lưu hồ sơ
     try:
@@ -240,15 +248,33 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
 def get_job_by_id(job_id):
     return Job.query.get(job_id)
 
+def check_applied(candidate_id, job_id):
+    from rapp.models import Application
+    return (Application.query
+                        .filter_by(candidate_id=candidate_id, job_id=job_id)
+                        .first() is not None)
+
+def update_user_profile(user_id, data):
+    user = User.query.get(user_id)
+    if user:
+        user.name = data.get('name')
+        user.email = data.get('email')
+        user.phone = data.get('phone')
+
+        db.session.commit()
+        return True
+    return False
+
+def get_my_applications(candidate_id):
+    return Application.query.filter_by(candidate_id=candidate_id).all()
+
+
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 def get_application_by_id(app_id):
     return Application.query.get(app_id)
 
 def get_applications_by_job(job_id):
     return Application.query.filter_by(job_id=job_id).all()
-
-def get_my_applications(candidate_id):
-    return Application.query.filter_by(candidate_id=candidate_id).all()
 
 def update_application_status(app_id, new_status, updater_id, updater_role):
     # 1. Tìm hồ sơ
@@ -297,4 +323,36 @@ def update_application_status(app_id, new_status, updater_id, updater_role):
         db.session.rollback()
         raise Exception("Lỗi hệ thống: " + str(e))
     return application
+
+
+def get_categories():
+    return Category.query.all()
+
+
+def toggle_job_active(job_id):
+    job = Job.query.get(job_id)
+    if job:
+        # Sử dụng cột active có sẵn trong BaseModel
+        job.active = not job.active
+        db.session.commit()
+        return True
+    return False
+
+
+def update_job(job_id, data):
+    job = Job.query.get(job_id)
+    if job:
+        job.title = data.get('title')
+        job.description = data.get('description')
+        job.salary = float(data.get('salary', 0))
+        job.category_id = int(data.get('category'))
+
+        # Xử lý ngày tháng
+        deadline_str = data.get('deadline')
+        if deadline_str:
+            job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+
+        db.session.commit()
+        return True
+    return False
 

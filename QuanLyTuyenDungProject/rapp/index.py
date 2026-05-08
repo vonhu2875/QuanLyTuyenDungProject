@@ -117,40 +117,78 @@ def load_user(user_id):
 @app.route('/jobs/<int:job_id>')
 def job_detail(job_id):
     job = dao.get_job_by_id(job_id)
-    return render_template('job_details.html', job=job)
+
+    applied = False
+
+    if current_user.is_authenticated and current_user.user_role == UserRole.CANDIDATE:
+        applied = dao.check_applied(current_user.id, job_id)
+
+    return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole)
 
 # Nghiệp vụ chính 2: Nộp hồ sơ
-@app.route('/apply-upload/<int:job_id>')
+@app.route('/apply-job/<int:job_id>', methods=['GET', 'POST'])
 @login_required
-def apply_upload_view(job_id):
+def apply_job(job_id):
     job = dao.get_job_by_id(job_id)
+
+    # 1. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
+    if request.method == 'POST':
+        try:
+            cv_file = request.files.get('cv_file')
+            dao.apply_for_job(
+                job_id=job_id,
+                candidate_id=current_user.id,
+                user_role=current_user.user_role,
+                cv_file=cv_file
+            )
+            # THÀNH CÔNG: Trả về trang nộp và kèm tin nhắn xanh
+            succ_msg = "Nộp hồ sơ thành công!"
+            return render_template('apply_job.html', job=job, succ_msg=succ_msg)
+
+        except (ValidationError, DuplicateError) as ex:
+            # LỖI NGHIỆP VỤ: Trả về trang nộp và kèm tin nhắn đỏ
+            return render_template('apply_job.html', job=job, err_msg=str(ex))
+
+        except Exception as ex:
+            # LỖI HỆ THỐNG
+            err_msg = "Có lỗi xảy ra, vui lòng thử lại."
+            return render_template('apply_job.html', job=job, err_msg=err_msg)
+
+    # 2. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
     return render_template('apply_job.html', job=job)
 
+# Liên hệ (Contact)
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
-@app.route('/apply-process/<int:job_id>', methods=['POST'])
+#Hồ sơ cá nhân của CANDIDATE
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
-def apply_job_process(job_id):
-    try:
-        cv_file = request.files.get('cv_file')
-        dao.apply_for_job(
-            job_id=job_id,
-            candidate_id=current_user.id,
-            user_role=current_user.user_role,
-            cv_file=cv_file
-        )
+def profile():
+    if request.method == 'POST':
+        if dao.update_user_profile(current_user.id, request.form):
+            succ_msg = "Cập nhật hồ sơ thành công!"
+            return render_template('profile.html', succ_msg=succ_msg)
+        else:
+            err_msg = "Có lỗi xảy ra khi cập nhật."
+            return render_template('profile.html', err_msg=err_msg)
 
-        # Thông báo thành công khi nộp xong
-        flash("Nộp hồ sơ thành công! Chúc bạn may mắn.", "success")
+    return render_template('profile.html')
+
+# Việc làm đã nộp
+@app.route('/profile/applications')
+@login_required
+def my_applications():
+    if current_user.user_role != UserRole.CANDIDATE:
         return redirect(url_for('index'))
 
-    except (ValidationError, DuplicateError) as ex:
-        flash(str(ex), "danger")
-        return redirect(url_for('apply_upload_view', job_id=job_id))  # Quay lại trang nộp để hiện lỗi
+    applications = dao.get_my_applications(current_user.id)
 
-    except Exception as ex:
-        flash("Có lỗi xảy ra, vui lòng thử lại sau.", "danger")
-        return redirect(url_for('apply_upload_view', job_id=job_id))
-    
+    return render_template('my_applications.html', applications=applications, UserRole=UserRole)
+
+
+
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 # Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
@@ -182,25 +220,6 @@ def update_status(job_id, app_id):
         return jsonify(success=False, message=str(ex)), 500
 
 
-# Quản lý hồ sơ ứng tuyển (EMPLOYER/ADMIN)
-@app.route('/manage_applications')
-@login_required
-def manage_applications():
-    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
-        return redirect('/')
-
-    if current_user.user_role == UserRole.ADMIN:
-        user_jobs = Job.query.all()
-    else:
-        user_jobs = current_user.jobs
-    apps_by_job = {j: dao.get_applications_by_job(j.id) for j in user_jobs}
-    apps_by_job = dict(sorted(
-        apps_by_job.items(),
-        key=lambda item: (-len(item[1]), item[0].deadline)
-    ))
-
-    return render_template('manage_applications.html', apps_by_job=apps_by_job, now=datetime.now())
-
 # Quản lý tin đăng
 @app.route('/manage_jobs')
 @login_required
@@ -209,11 +228,9 @@ def manage_jobs():
         return redirect('/')
 
     user_jobs = current_user.jobs
-    apps_by_job = {j.id: dao.get_applications_by_job(j.id) for j in user_jobs}
 
     return render_template('manage_jobs.html',
                            jobs=user_jobs,
-                           apps_by_job=apps_by_job,
                            now=datetime.now())
 
 #Tính năng đóng/mở tin
@@ -247,33 +264,7 @@ def edit_job(job_id):
     categories = dao.get_categories()
     return render_template('edit_job.html', job=job, categories=categories)
 
-#=========================Ngại và Hiền (Bé Hà)==========================
-#Việc làm đã nộp
-@app.route('/my-applications')
-@login_required
-def my_applications():
-    if current_user.user_role != UserRole.CANDIDATE:
-        return redirect(url_for('index'))
-    applications = dao.get_my_applications(current_user.id)
-    return render_template('my_applications.html', applications=applications)
 
-
-# Liên hệ (Contact)
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
-
-
-#Hồ sơ cá nhân
-@app.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    if request.method == 'POST':
-        if dao.update_user_profile(current_user.id, request.form):
-            flash("Cập nhật hồ sơ thành công!", "success")
-            return redirect(url_for('profile'))
-
-    return render_template('profile.html')
 
 #========================================================================
 if __name__ == "__main__":

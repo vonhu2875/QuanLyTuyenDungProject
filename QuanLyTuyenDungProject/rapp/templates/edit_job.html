@@ -1,0 +1,39 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-4 p-4 mx-auto" style="max-width: 700px;">
+        <h2 class="fw-bold text-jobhub mb-4"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa tin tuyển dụng</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tiêu đề công việc</label>
+                <input type="text" name="title" class="form-control" value="{{ job.title }}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Mức lương (VNĐ)</label>
+                    <input type="number" name="salary" class="form-control" value="{{ job.salary }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Hạn nộp hồ sơ</label>
+                    <input type="date" name="deadline" class="form-control" value="{{ job.deadline.strftime('%Y-%m-%d') }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ngành nghề</label>
+                <select name="category" class="form-select">
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {{ 'selected' if c.id == job.category_id }}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mô tả công việc</label>
+                <textarea name="description" class="form-control" rows="5" required>{{ job.description }}</textarea>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-jobhub btn-lg rounded-pill fw-bold">Cập nhật ngay</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

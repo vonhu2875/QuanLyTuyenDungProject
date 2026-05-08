@@ -1,15 +1,22 @@
 {% extends 'layout/base.html' %}
 
-{% block title %}Đăng ký tài khoản{% endblock %}
+{% block title %}Đăng ký tài khoản - JobHub N10{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5" style="max-width: 600px;">
-    <h1 class="text-jobhub text-center fw-bold">ĐĂNG KÝ NGƯỜI DÙNG</h1>
+<div class="container mt-4 mb-5" style="max-width: 550px;"> <div class="text-center mb-4">
+        <h1 class="text-jobhub fw-bold">ĐĂNG KÝ TÀI KHOẢN</h1>
+        <p class="text-muted small">Trở thành thành viên của cộng đồng tuyển dụng Nhóm 10</p>
+    </div>
 
     {% if err_msg %}
-    <div class="alert alert-danger">{{err_msg}}</div>
+    <div class="alert alert-danger alert-dismissible fade show rounded-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{err_msg}}
+    </div>
     {% endif %}
-    <form method="post" action="/register" enctype="multipart/form-data" class="shadow-sm p-4 rounded-4 bg-white border">
+
+    <form method="post" action="/register" enctype="multipart/form-data"
+          class="shadow-lg p-4 p-md-5 rounded-4 bg-white border-0">
+
         <div class="form-floating mb-3">
             <input type="text" class="form-control" id="name" name="name" placeholder="Họ tên" required>
             <label for="name">Họ và tên</label>
@@ -18,16 +25,24 @@
         <div class="form-floating mb-3">
             <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
             <label for="username">Tên đăng nhập (5-20 ký tự)</label>
+            <div class="form-text text-muted ms-2" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i>Không chứa khoảng trắng và ký tự đặc biệt
+            </div>
         </div>
 
-        <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
-            <label for="email">Email liên lạc</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Số điện thoại" required>
-            <label for="phone">Số điện thoại</label>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                    <label for="email">Email</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Số điện thoại" required>
+                    <label for="phone">Số điện thoại</label>
+                </div>
+            </div>
         </div>
 
         <div class="form-floating mb-3">
@@ -37,12 +52,15 @@
                     <option value="{{ role.name }}">{{role.name}}</option>
                 {% endfor %}
             </select>
-            <label for="user_role">Bạn là ai?</label>
+            <label for="user_role">Bạn tham gia với tư cách?</label>
         </div>
 
         <div class="form-floating mb-3">
             <input type="password" class="form-control" id="pwd" name="password" placeholder="Mật khẩu" required>
             <label for="pwd">Mật khẩu</label>
+            <div class="form-text text-muted ms-2" style="font-size: 0.75rem;">
+                <i class="bi bi-shield-lock me-1"></i>Ít nhất 8 ký tự, có chữ hoa, thường và số
+            </div>
         </div>
 
         <div class="form-floating mb-3">
@@ -50,19 +68,20 @@
             <label for="confirm">Xác nhận mật khẩu</label>
         </div>
 
-        <div class="mb-3">
-            <label for="avatar" class="form-label text-secondary px-2" style="font-size: 0.85rem;">Ảnh đại diện</label>
+        <div class="mb-4">
+            <label for="avatar" class="form-label fw-bold text-secondary ps-1" style="font-size: 0.85rem;">Ảnh đại diện</label>
             <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
         </div>
 
         <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-jobhub btn-lg fw-bold rounded-pill shadow-sm">
-                Tạo tài khoản
+            <button type="submit" class="btn btn-jobhub py-3 fw-bold shadow-sm">
+                TẠO TÀI KHOẢN NGAY
             </button>
         </div>
 
-        <p class="text-center mt-3">
-            Đã có tài khoản? <a href="/login" class="text-jobhub fw-bold text-decoration-none">Đăng nhập ngay</a>
+        <p class="text-center mt-4 mb-0">
+            <span class="text-muted">Đã có tài khoản?</span>
+            <a href="/login" class="text-jobhub fw-bold text-decoration-none ms-1">Đăng nhập</a>
         </p>
     </form>
 </div>

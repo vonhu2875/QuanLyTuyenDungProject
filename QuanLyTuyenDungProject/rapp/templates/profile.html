@@ -1,0 +1,61 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% if succ_msg %}
+            <div class="alert alert-success">{{succ_msg}}</div>
+            {% endif %}
+
+            {% if err_msg %}
+            <div class="alert alert-danger">{{err_msg}}</div>
+            {% endif %}
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-jobhub p-4 text-center text-white">
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ current_user.avatar if current_user.avatar else url_for('static', filename='images/default-avatar.png') }}" 
+                             class="rounded-circle border border-4 border-white shadow" 
+                             style="width: 120px; height: 120px; object-fit: cover;">
+                        <button class="btn btn-light btn-sm position-absolute bottom-0 end-0 rounded-circle shadow">
+                            <i class="bi bi-camera-fill"></i>
+                        </button>
+                    </div>
+                    <h3 class="mt-3 fw-bold">{{ current_user.name }}</h3>
+                    <span class="badge bg-white text-jobhub rounded-pill px-3">{{ current_user.user_role.name }}</span>
+                </div>
+                
+                <div class="card-body p-4 p-lg-5">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Họ và tên</label>
+                                <input type="text" name="name" class="form-control rounded-3" value="{{ current_user.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Tên đăng nhập</label>
+                                <input type="text" class="form-control rounded-3 bg-light" value="{{ current_user.username }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Email</label>
+                                <input type="email" name="email" class="form-control rounded-3" value="{{ current_user.email }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Số điện thoại</label>
+                                <input type="text" name="phone" class="form-control rounded-3" value="{{ current_user.phone }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <p class="text-muted small mb-0">Ngày tham gia: {{ current_user.created_date.strftime('%d/%m/%Y') }}</p>
+                            <button type="submit" class="btn btn-jobhub px-5 rounded-pill fw-bold shadow">
+                                <i class="bi bi-check2-circle me-2"></i>Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

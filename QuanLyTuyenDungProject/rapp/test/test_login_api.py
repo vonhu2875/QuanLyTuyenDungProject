@@ -1,6 +1,6 @@
 from rapp.test.test_base import test_client, test_app
 import hashlib
-
+from rapp.dao import ValidationError
 
 def test_login_view(test_client, mocker):
     mocker.patch("rapp.index.render_template", return_value="Trang Login")
@@ -24,9 +24,6 @@ def test_login_success(test_client, mocker):
     assert res.location.endswith('/')
     mock_auth.assert_called_once()
     mock_login.assert_called_once()
-
-from rapp.dao import ValidationError  # Nhớ import lỗi này vào bài test
-
 
 def test_login_exception(test_client, mocker):
     mocker.patch("rapp.dao.auth_user", side_effect=ValidationError("Sai tên đăng nhập hoặc sai mật khẩu!"))

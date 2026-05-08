@@ -1,0 +1,86 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Quản lý tin tuyển dụng</h2>
+            <p class="text-muted">Bạn có <span class="badge bg-jobhub">{{ jobs|length }}</span> tin đăng trong hệ thống</p>
+        </div>
+        <a href="/jobs" class="btn btn-jobhub rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Đăng tin mới
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3">Vị trí tuyển dụng</th>
+                        <th class="py-3">Ngành nghề</th>
+                        <th class="py-3">Lương</th>
+                        <th class="py-3">Hạn nộp</th>
+                        <th class="py-3 text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jobs %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ j.title }}</div>
+                            <small class="text-muted">Đăng ngày: {{ j.created_date.strftime('%d/%m/%Y') }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-jobhub border border-jobhub-subtle px-3 py-2">
+                                {{ j.category.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-success fw-medium">{{ "{:,.0f}".format(j.salary) }} VNĐ</span>
+                        </td>
+                        <td>
+                            <div class="small {{ 'text-danger fw-bold' if j.deadline < now else 'text-dark' }}">
+                                {{ j.deadline.strftime('%d/%m/%Y') }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="/edit_job/{{ j.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <form action="/toggle_job_status/{{ j.id }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if j.active else 'btn-outline-success' }} rounded-pill px-3 shadow-sm">
+                                        <i class="bi {{ 'bi-eye-slash' if j.active else 'bi-eye' }}"></i>
+                                        {{ 'Đóng tin' if j.active else 'Mở lại' }}
+                                    </button>
+                                </form>
+
+                                <form action="/delete_job/{{ j.id }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('Hà có chắc muốn xóa tin này không?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="text-muted mb-3">
+                                <i class="bi bi-clipboard2-x fs-1"></i>
+                            </div>
+                            <p>Bạn chưa có tin tuyển dụng nào được đăng.</p>
+                            <a href="/jobs" class="btn btn-outline-jobhub rounded-pill px-4">Bắt đầu đăng tin ngay</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

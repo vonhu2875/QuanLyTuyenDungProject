@@ -1,117 +1,117 @@
 import math
 from datetime import datetime
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from unicodedata import category
 
-from rapp import dao, app, login
+from rapp import dao, app, login, db
 from rapp.dao import add_user, add_job
 from rapp.exceptions import ValidationError, DuplicateError
-from rapp.models import User, UserRole
+from rapp.models import User, UserRole, Job, Category
 
-#TRANG CHỦ
-@app.route('/')
-def index():
-    cate_id = request.args.get('category_id')
-    kw = request.args.get('kw')
-    categories = dao.load_categories()
-    page = int(request.args.get('page', 1))
-    jobs = dao.load_jobs(cate_id, kw, page)
-    return render_template("index.html", jobs=jobs, categories=categories,
-                           pages=math.ceil(dao.count_jobs(cate_id) / app.config['PAGE_SIZE']))
+def register_routes_nv1(app):
+    #TRANG CHỦ
+    @app.route('/')
+    def index():
+        cate_id = request.args.get('category_id')
+        kw = request.args.get('kw')
+        categories = dao.load_categories()
+        page = int(request.args.get('page', 1))
+        jobs = dao.load_jobs(cate_id, kw, page)
+        return render_template("index.html", jobs=jobs, categories=categories,
+                               pages=math.ceil(dao.count_jobs(cate_id) / app.config['PAGE_SIZE']))
 
-#LOGIN
-@app.route('/login')
-def login_view():
-    return render_template('login.html')
+    #LOGIN
+    @app.route('/login')
+    def login_view():
+        return render_template('login.html')
 
-@app.route('/login', methods=['post'])
-def login_process():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    try:
-        user = dao.auth_user(username=username, password=password)
-        if user:
-            login_user(user=user)
-        next = request.args.get('next')
-        return redirect(next if next else '/')
-    except ValidationError as val:
-        return render_template('login.html', err_msg=str(val))
-    except DuplicateError as dup:
-        return render_template('login.html', err_msg=str(dup))
-    except Exception as ex:
-        return render_template('login.html', err_msg=str(ex))
-#LOGOUT
-@app.route('/logout')
-def logout_process():
-    logout_user()
-    return redirect('/login')
-
-#REGISTER
-@app.route('/register')
-def register_view():
-    users_show = [UserRole.EMPLOYER, UserRole.CANDIDATE]
-    return render_template('register.html', UserRole = users_show)
-
-@app.route('/register', methods=['post'])
-def register_process():
-    users_show = [UserRole.EMPLOYER, UserRole.CANDIDATE]
-    data = request.form
-
-    password = data.get("password")
-    confirm = data.get("confirm")
-    if password != confirm:
-        err_msg = "Mật khẩu không khớp!"
-        return render_template('register.html', err_msg=err_msg,UserRole = users_show)
-    try:
-        add_user(name=data.get('name'), username=data.get('username'), password=password, avatar=request.files.get('avatar'),
-                 email=data.get('email'), phone=data.get('phone'), user_role=data.get('user_role'))
+    @app.route('/login', methods=['post'])
+    def login_process():
+        username = request.form.get('username')
+        password = request.form.get('password')
+        try:
+            user = dao.auth_user(username=username, password=password)
+            if user:
+                login_user(user=user)
+            next = request.args.get('next')
+            return redirect(next if next else '/')
+        except ValidationError as val:
+            return render_template('login.html', err_msg=str(val))
+        except DuplicateError as dup:
+            return render_template('login.html', err_msg=str(dup))
+        except Exception as ex:
+            return render_template('login.html', err_msg=str(ex))
+    #LOGOUT
+    @app.route('/logout')
+    def logout_process():
+        logout_user()
         return redirect('/login')
-    except ValidationError as val:
-        return render_template('register.html', err_msg=str(val), UserRole = users_show)
-    except DuplicateError as dup:
-        return render_template('register.html', err_msg=str(dup), UserRole = users_show)
-    except Exception as ex:
-        return render_template('register.html', err_msg=str(ex), UserRole = users_show)
+
+    #REGISTER
+    @app.route('/register')
+    def register_view():
+        users_show = [UserRole.EMPLOYER, UserRole.CANDIDATE]
+        return render_template('register.html', UserRole = users_show)
+
+    @app.route('/register', methods=['post'])
+    def register_process():
+        users_show = [UserRole.EMPLOYER, UserRole.CANDIDATE]
+        data = request.form
+        password = data.get("password")
+        confirm = data.get("confirm")
+        if password != confirm:
+            err_msg = "Mật khẩu không khớp!"
+            return render_template('register.html', err_msg=err_msg,UserRole = users_show)
+        try:
+            add_user(name=data.get('name'), username=data.get('username'), password=password, avatar=request.files.get('avatar'),
+                     email=data.get('email'), phone=data.get('phone'), user_role=UserRole[data.get('user_role')])
+            return redirect('/login')
+        except ValidationError as val:
+            return render_template('register.html', err_msg=str(val), UserRole = users_show)
+        except DuplicateError as dup:
+            return render_template('register.html', err_msg=str(dup), UserRole = users_show)
+        except Exception as ex:
+            return render_template('register.html', err_msg=str(ex), UserRole = users_show)
 
 
-#Nghiệp vụ chính 1: Đăng tin tuyển dụng
-@app.route('/jobs')
-@login_required
-def job_view():
-    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
-        return redirect('/login')
-    categories = dao.load_categories()
-    return render_template('job.html', categories=categories)
+    #Nghiệp vụ chính 1: Đăng tin tuyển dụng
+    @app.route('/jobs')
+    @login_required
+    def job_view():
+        if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+            return redirect('/login')
+        categories = dao.load_categories()
+        return render_template('job.html', categories=categories)
 
-@app.route('/jobs', methods=['POST'])
-@login_required
-def create_job():
-    categories = dao.load_categories()
-    data = request.form
-    title = data.get('title')
-    description = data.get('description')
-    salary = (data.get('salary'))
-    deadline_str = data.get('deadline')
-    deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
-    category_id = int(data.get('category_id'))
-    try:
-        add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id, employer_id=current_user.id,user_role = current_user.user_role)
-        return redirect('/')
-    except ValidationError as val:
-        return render_template('job.html', err_msg=str(val), categories=categories)
-    except DuplicateError as dup:
-        return render_template('job.html', err_msg=str(dup), categories=categories)
-    except Exception as ex:
-        return render_template('job.html', err_msg=str(ex), categories=categories)
+    @app.route('/jobs', methods=['POST'])
+    @login_required
+    def create_job():
+        categories = dao.load_categories()
+        data = request.form
+        title = data.get('title')
+        description = data.get('description')
+        salary = (data.get('salary'))
+        deadline_str = data.get('deadline')
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+        category_id = int(data.get('category_id'))
+        try:
+            add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id, employer_id=current_user.id,user_role = current_user.user_role)
+            return redirect('/')
+        except ValidationError as val:
+            return render_template('job.html', err_msg=str(val), categories=categories)
+        except DuplicateError as dup:
+            return render_template('job.html', err_msg=str(dup), categories=categories)
+        except Exception as ex:
+            return render_template('job.html', err_msg=str(ex), categories=categories)
 
 
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
 
-#=========================Nghiệp vụ 2: Bé Hà==========================
+#=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 # JOB DETAILS
 @app.route('/jobs/<int:job_id>')
@@ -139,49 +139,31 @@ def apply_job_process(job_id):
             cv_file=cv_file
         )
 
+        # Thông báo thành công khi nộp xong
         flash("Nộp hồ sơ thành công! Chúc bạn may mắn.", "success")
         return redirect(url_for('index'))
 
     except (ValidationError, DuplicateError) as ex:
-        job = dao.get_job_by_id(job_id)
-        return render_template('apply_job.html', err_msg=str(ex), job=job)
+        flash(str(ex), "danger")
+        return redirect(url_for('apply_upload_view', job_id=job_id))  # Quay lại trang nộp để hiện lỗi
+
+    except Exception as ex:
+        flash("Có lỗi xảy ra, vui lòng thử lại sau.", "danger")
+        return redirect(url_for('apply_upload_view', job_id=job_id))
     
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
-# Danh sách hồ sơ ứng tuyển (EMPLOYER/ADMIN)
-@app.route('/jobs/<int:job_id>/applications')
-@login_required
-def job_applications(job_id):
-    if current_user.user_role == UserRole.CANDIDATE:
-        return redirect(url_for('my_applications'))
-
-    job = dao.get_job_by_id(job_id)
-    if not job:
-        flash("Tin tuyển dụng không tồn tại.", "danger")
-        return redirect(url_for('index'))
-
-    if current_user.user_role == UserRole.EMPLOYER and job.employer_id != current_user.id:
-        flash("Bạn không có quyền xem hồ sơ này.", "danger")
-        return redirect(url_for('index'))
-
-    applications = dao.get_applications_by_job(job_id)
-    return render_template('applications.html', applications=applications, job=job)
-
-
 # Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
-@app.route('/applications/<int:app_id>/status', methods=['POST'])
+@app.route('/jobs/<int:job_id>/applications/<int:app_id>/status', methods=['PATCH'])
 @login_required
-def update_status(app_id):
+def update_status(job_id, app_id):
     if current_user.user_role == UserRole.CANDIDATE:
-        flash("Bạn không có quyền thực hiện thao tác này.", "danger")
-        return redirect(url_for('index'))
+        return jsonify(success=False, message="Bạn không có quyền thực hiện thao tác này."), 403
 
     application = dao.get_application_by_id(app_id)
-    if not application:
-        flash("Hồ sơ không tồn tại.", "danger")
-        return redirect(url_for('index'))
+    if not application or application.job_id != job_id:
+        return jsonify(success=False, message="Hồ sơ không tồn tại."), 404
 
-    job_id = application.job_id
     new_status = request.form.get('status')
     try:
         dao.update_application_status(
@@ -191,18 +173,82 @@ def update_status(app_id):
             updater_role=current_user.user_role
         )
         flash("Cập nhật trạng thái thành công!", "success")
-        return redirect(url_for('job_applications', job_id=job_id))
-    except ValidationError as val:
-        applications = dao.get_applications_by_job(job_id)
-        job = dao.get_job_by_id(job_id)
-        return render_template('applications.html', applications=applications, job=job, err_msg=str(val))
+        return jsonify(success=True, message="Cập nhật trạng thái thành công!")
+    except (ValidationError, DuplicateError) as ex:
+        flash(str(ex), "danger")
+        return jsonify(success=False, message=str(ex)), 400
     except Exception as ex:
-        applications = dao.get_applications_by_job(job_id)
-        job = dao.get_job_by_id(job_id)
-        return render_template('applications.html', applications=applications, job=job, err_msg=str(ex))
+        flash(str(ex), "danger")
+        return jsonify(success=False, message=str(ex)), 500
 
 
-# Hồ sơ của tôi (CANDIDATE)
+# Quản lý hồ sơ ứng tuyển (EMPLOYER/ADMIN)
+@app.route('/manage_applications')
+@login_required
+def manage_applications():
+    if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+        return redirect('/')
+
+    if current_user.user_role == UserRole.ADMIN:
+        user_jobs = Job.query.all()
+    else:
+        user_jobs = current_user.jobs
+    apps_by_job = {j: dao.get_applications_by_job(j.id) for j in user_jobs}
+    apps_by_job = dict(sorted(
+        apps_by_job.items(),
+        key=lambda item: (-len(item[1]), item[0].deadline)
+    ))
+
+    return render_template('manage_applications.html', apps_by_job=apps_by_job, now=datetime.now())
+
+# Quản lý tin đăng
+@app.route('/manage_jobs')
+@login_required
+def manage_jobs():
+    if current_user.user_role.name not in ['EMPLOYER', 'ADMIN']:
+        return redirect('/')
+
+    user_jobs = current_user.jobs
+    apps_by_job = {j.id: dao.get_applications_by_job(j.id) for j in user_jobs}
+
+    return render_template('manage_jobs.html',
+                           jobs=user_jobs,
+                           apps_by_job=apps_by_job,
+                           now=datetime.now())
+
+#Tính năng đóng/mở tin
+@app.route('/toggle_job_status/<int:job_id>', methods=['POST'])
+@login_required
+def toggle_status(job_id):
+    if dao.toggle_job_active(job_id):
+        return redirect(url_for('manage_jobs'))
+    return "Lỗi: Không tìm thấy tin đăng", 404
+
+#Xóa tin
+@app.route('/delete_job/<int:job_id>', methods=['POST'])
+@login_required
+def delete_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    if job.employer_id == current_user.id:
+        db.session.delete(job)
+        db.session.commit()
+    return redirect(url_for('manage_jobs'))
+
+#Sửa tin
+@app.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def edit_job(job_id):
+    job = Job.query.get_or_404(job_id)
+
+    if request.method == 'POST':
+        if dao.update_job(job_id, request.form):
+            return redirect(url_for('manage_jobs'))
+
+    categories = dao.get_categories()
+    return render_template('edit_job.html', job=job, categories=categories)
+
+#=========================Ngại và Hiền (Bé Hà)==========================
+#Việc làm đã nộp
 @app.route('/my-applications')
 @login_required
 def my_applications():
@@ -212,5 +258,24 @@ def my_applications():
     return render_template('my_applications.html', applications=applications)
 
 
+# Liên hệ (Contact)
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+
+#Hồ sơ cá nhân
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        if dao.update_user_profile(current_user.id, request.form):
+            flash("Cập nhật hồ sơ thành công!", "success")
+            return redirect(url_for('profile'))
+
+    return render_template('profile.html')
+
+#========================================================================
 if __name__ == "__main__":
+    register_routes_nv1(app)
     app.run(debug=True)

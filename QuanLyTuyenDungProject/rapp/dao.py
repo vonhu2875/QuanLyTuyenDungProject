@@ -241,7 +241,6 @@ def get_job_by_id(job_id):
     return Job.query.get(job_id)
 
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
-
 def get_application_by_id(app_id):
     return Application.query.get(app_id)
 
@@ -263,13 +262,12 @@ def update_application_status(app_id, new_status, updater_id, updater_role):
 
     job = Job.query.get(application.job_id)
 
-    # EMPLOYER chỉ được cập nhật hồ sơ thuộc job của mình
-    if updater_role == UserRole.EMPLOYER and (not job or job.employer_id != updater_id):
-        raise ValidationError("Bạn không có quyền cập nhật hồ sơ này!")
+    if not job:
+        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn tồn tại!")
 
-    # 3. Kiểm tra job còn hoạt động (ràng buộc f)
-    if not job or not job.active:
-        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn hoạt động!")
+    # EMPLOYER chỉ được cập nhật hồ sơ thuộc job của mình
+    if updater_role == UserRole.EMPLOYER and job.employer_id != updater_id:
+        raise ValidationError("Bạn không có quyền cập nhật hồ sơ này!")
 
     # Parse new_status từ string sang enum
     if isinstance(new_status, str):
@@ -280,15 +278,15 @@ def update_application_status(app_id, new_status, updater_id, updater_role):
 
     current_status = application.status
 
-    # 4. SUBMITTED → ACCEPTED phải qua INTERVIEW trước (ràng buộc e)
+    # 3. SUBMITTED → ACCEPTED phải qua INTERVIEW trước (ràng buộc e)
     if current_status == AppStatus.SUBMITTED and new_status == AppStatus.ACCEPTED:
         raise ValidationError("Phải chuyển qua trạng thái Phỏng vấn trước!")
 
-    # 5. REJECTED → INTERVIEW không được phép (ràng buộc c — kiểm tra trước terminal state)
+    # 4. REJECTED → INTERVIEW không được phép (ràng buộc c — kiểm tra trước terminal state)
     if current_status == AppStatus.REJECTED and new_status == AppStatus.INTERVIEW:
         raise ValidationError("Không thể chuyển từ Từ chối sang Phỏng vấn!")
 
-    # 6. Trạng thái cuối không thể thay đổi (ràng buộc d)
+    # 5. Trạng thái cuối không thể thay đổi (ràng buộc d)
     if current_status in [AppStatus.ACCEPTED, AppStatus.REJECTED]:
         raise ValidationError("Hồ sơ đã ở trạng thái cuối, không thể thay đổi!")
 

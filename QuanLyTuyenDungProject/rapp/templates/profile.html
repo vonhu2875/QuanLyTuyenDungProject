@@ -3,6 +3,14 @@
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
+            {% if succ_msg %}
+            <div class="alert alert-success">{{succ_msg}}</div>
+            {% endif %}
+
+            {% if err_msg %}
+            <div class="alert alert-danger">{{err_msg}}</div>
+            {% endif %}
+
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="bg-jobhub p-4 text-center text-white">
                     <div class="position-relative d-inline-block">

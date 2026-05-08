@@ -267,7 +267,7 @@ def register_routes_nv3(app):
         return redirect(url_for('manage_jobs'))
 
     #Xóa tin
-    @app.route('/delete_job/<int:job_id>', methods=['POST'])
+    @app.route('/delete_job/<int:job_id>', methods=['DELETE'])
     @login_required
     def delete_job(job_id):
         job = Job.query.get_or_404(job_id)
@@ -277,20 +277,20 @@ def register_routes_nv3(app):
         return redirect(url_for('manage_jobs'))
 
     #Sửa tin
-    @app.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
+    @app.route('/edit_job/<int:job_id>', methods=['GET', 'PATCH'])
     @login_required
     def edit_job(job_id):
         job = Job.query.get_or_404(job_id)
         categories = dao.get_categories()
 
-        if request.method == 'POST':
+        if request.method == 'PATCH':
             try:
                 if dao.update_job(job_id, request.form):
-                    return redirect(url_for('manage_jobs'))
+                    return jsonify(success=True, redirect=url_for('manage_jobs'))
             except ValidationError as val:
-                return render_template('edit_job.html', job=job, categories=categories, err_msg=str(val))
+                return jsonify(success=False, error=str(val))
             except Exception as ex:
-                return render_template('edit_job.html', job=job, categories=categories, err_msg=str(ex))
+                return jsonify(success=False, error=str(ex))
 
         return render_template('edit_job.html', job=job, categories=categories)
 

@@ -122,7 +122,7 @@ def test_update_status_success(test_client, mocker):
     mocker.patch('rapp.index.dao.get_application_by_id', return_value=FakeApplication())
     mock_update = mocker.patch('rapp.index.dao.update_application_status', return_value=FakeApplication())
 
-    res = test_client.post('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
+    res = test_client.patch('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
 
     assert res.status_code == 302
     assert 'applications' in res.location
@@ -145,7 +145,7 @@ def test_update_status_validation_error(test_client, mocker):
     mocker.patch('rapp.index.dao.update_application_status',
                  side_effect=ValidationError("Hồ sơ đã ở trạng thái cuối, không thể thay đổi!"))
 
-    res = test_client.post('/jobs/1/applications/1/status', data={'status': 'SUBMITTED'})
+    res = test_client.patch('/jobs/1/applications/1/status', data={'status': 'SUBMITTED'})
 
     assert res.status_code == 302
     assert 'applications' in res.location
@@ -160,7 +160,7 @@ def test_update_status_candidate_forbidden(test_client, mocker):
 
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
 
-    res = test_client.post('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
+    res = test_client.patch('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
 
     assert res.status_code == 403
 
@@ -175,7 +175,7 @@ def test_update_status_app_not_found(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('rapp.index.dao.get_application_by_id', return_value=None)
 
-    res = test_client.post('/jobs/1/applications/999/status', data={'status': 'INTERVIEW'})
+    res = test_client.patch('/jobs/1/applications/999/status', data={'status': 'INTERVIEW'})
 
     assert res.status_code == 404
 
@@ -194,6 +194,6 @@ def test_update_status_app_wrong_job(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('rapp.index.dao.get_application_by_id', return_value=FakeApplication())
 
-    res = test_client.post('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
+    res = test_client.patch('/jobs/1/applications/1/status', data={'status': 'INTERVIEW'})
 
     assert res.status_code == 404

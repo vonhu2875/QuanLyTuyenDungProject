@@ -292,19 +292,19 @@ def test_tc3_7_accepted_to_rejected(setup_nv3, test_session):
 
 # ===== Nhóm 4: Kiểm tra điều kiện job (ràng buộc f) =====
 
-def test_tc4_1_hidden_job_can_still_update(setup_nv3, test_session):
-    """TC4.1: Job đã đóng (active=False) nhưng hồ sơ đã nộp trước đó → vẫn được cập nhật trạng thái"""
+def test_tc4_1_hidden_job_cannot_update(setup_nv3, test_session):
+    """TC4.1: Job đã đóng (active=False) → không được cập nhật trạng thái"""
     d = setup_nv3
     d["job_a"].active = False
     test_session.commit()
 
-    result = update_application_status(
-        app_id=d["app_a"].id,
-        new_status="INTERVIEW",
-        updater_id=d["employer_a"].id,
-        updater_role=UserRole.EMPLOYER
-    )
-    assert result.status == AppStatus.INTERVIEW
+    with pytest.raises(ValidationError, match="Không thể cập nhật — tin tuyển dụng không còn hoạt động!"):
+        update_application_status(
+            app_id=d["app_a"].id,
+            new_status="INTERVIEW",
+            updater_id=d["employer_a"].id,
+            updater_role=UserRole.EMPLOYER
+        )
 
 
 def test_tc4_2_deleted_job(setup_nv3, test_session):

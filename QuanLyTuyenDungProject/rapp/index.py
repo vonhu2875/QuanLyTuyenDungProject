@@ -191,82 +191,113 @@ def my_applications():
 
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
-# Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
-@app.route('/jobs/<int:job_id>/applications/<int:app_id>/status', methods=['PATCH'])
-@login_required
-def update_status(job_id, app_id):
-    if current_user.user_role == UserRole.CANDIDATE:
-        return jsonify(success=False, message="Bạn không có quyền thực hiện thao tác này."), 403
+def register_routes_nv3(app):
+    # Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
+    @app.route('/jobs/<int:job_id>/applications')
+    @login_required
+    def manage_applications(job_id):
+        if current_user.user_role == UserRole.CANDIDATE:
+            return redirect('/')
 
-    application = dao.get_application_by_id(app_id)
-    if not application or application.job_id != job_id:
-        return jsonify(success=False, message="Hồ sơ không tồn tại."), 404
-
-    new_status = request.form.get('status')
-    try:
-        dao.update_application_status(
-            app_id=app_id,
-            new_status=new_status,
-            updater_id=current_user.id,
-            updater_role=current_user.user_role
-        )
-        flash("Cập nhật trạng thái thành công!", "success")
-        return jsonify(success=True, message="Cập nhật trạng thái thành công!")
-    except (ValidationError, DuplicateError) as ex:
-        flash(str(ex), "danger")
-        return jsonify(success=False, message=str(ex)), 400
-    except Exception as ex:
-        flash(str(ex), "danger")
-        return jsonify(success=False, message=str(ex)), 500
-
-
-# Quản lý tin đăng
-@app.route('/manage_jobs')
-@login_required
-def manage_jobs():
-    if current_user.user_role.name not in ['EMPLOYER', 'ADMIN']:
-        return redirect('/')
-
-    user_jobs = current_user.jobs
-
-    return render_template('manage_jobs.html',
-                           jobs=user_jobs,
-                           now=datetime.now())
-
-#Tính năng đóng/mở tin
-@app.route('/toggle_job_status/<int:job_id>', methods=['POST'])
-@login_required
-def toggle_status(job_id):
-    if dao.toggle_job_active(job_id):
-        return redirect(url_for('manage_jobs'))
-    return "Lỗi: Không tìm thấy tin đăng", 404
-
-#Xóa tin
-@app.route('/delete_job/<int:job_id>', methods=['POST'])
-@login_required
-def delete_job(job_id):
-    job = Job.query.get_or_404(job_id)
-    if job.employer_id == current_user.id:
-        db.session.delete(job)
-        db.session.commit()
-    return redirect(url_for('manage_jobs'))
-
-#Sửa tin
-@app.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
-@login_required
-def edit_job(job_id):
-    job = Job.query.get_or_404(job_id)
-
-    if request.method == 'POST':
-        if dao.update_job(job_id, request.form):
+        job = dao.get_job_by_id(job_id)
+        if not job:
             return redirect(url_for('manage_jobs'))
 
-    categories = dao.get_categories()
-    return render_template('edit_job.html', job=job, categories=categories)
+        if current_user.user_role == UserRole.EMPLOYER and job.employer_id != current_user.id:
+            return redirect(url_for('manage_jobs'))
 
+        applications = dao.get_applications_by_job(job_id)
+        return render_template('applications.html', applications=applications, job=job)
+
+
+    @app.route('/jobs/<int:job_id>/applications/<int:app_id>/status', methods=['POST', 'PATCH'])
+    @login_required
+    def update_status(job_id, app_id):
+        if current_user.user_role == UserRole.CANDIDATE:
+            return jsonify(success=False, message="Bạn không có quyền thực hiện thao tác này."), 403
+
+        application = dao.get_application_by_id(app_id)
+        if not application or application.job_id != job_id:
+            return jsonify(success=False, message="Hồ sơ không tồn tại."), 404
+
+        new_status = request.form.get('status')
+        try:
+            dao.update_application_status(
+                app_id=app_id,
+                new_status=new_status,
+                updater_id=current_user.id,
+                updater_role=current_user.user_role
+            )
+            flash("Cập nhật trạng thái thành công!", "success")
+            return redirect(url_for('manage_applications', job_id=job_id))
+        except (ValidationError, DuplicateError) as ex:
+            flash(str(ex), "danger")
+            return redirect(url_for('manage_applications', job_id=job_id))
+        except Exception as ex:
+            flash(str(ex), "danger")
+            return redirect(url_for('manage_applications', job_id=job_id))
+
+
+    # Quản lý tin đăng
+    @app.route('/manage_jobs')
+    @login_required
+    def manage_jobs():
+        if current_user.user_role.name not in ['EMPLOYER', 'ADMIN']:
+            return redirect('/')
+
+        if current_user.user_role == UserRole.ADMIN:
+            user_jobs = Job.query.all()
+        else:
+            user_jobs = current_user.jobs
+
+        return render_template('manage_jobs.html',
+                               jobs=user_jobs,
+                               now=datetime.now())
+
+    #Tính năng đóng/mở tin
+    @app.route('/toggle_job_status/<int:job_id>', methods=['POST'])
+    @login_required
+    def toggle_status(job_id):
+        job = dao.get_job_by_id(job_id)
+        if not job:
+            return "Lỗi: Không tìm thấy tin đăng", 404
+        if current_user.user_role == UserRole.EMPLOYER and job.employer_id != current_user.id:
+            return "Bạn không có quyền thực hiện thao tác này!", 403
+        dao.toggle_job_active(job_id)
+        return redirect(url_for('manage_jobs'))
+
+    #Xóa tin
+    @app.route('/delete_job/<int:job_id>', methods=['POST'])
+    @login_required
+    def delete_job(job_id):
+        job = Job.query.get_or_404(job_id)
+        if job.employer_id == current_user.id:
+            db.session.delete(job)
+            db.session.commit()
+        return redirect(url_for('manage_jobs'))
+
+    #Sửa tin
+    @app.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
+    @login_required
+    def edit_job(job_id):
+        job = Job.query.get_or_404(job_id)
+        categories = dao.get_categories()
+
+        if request.method == 'POST':
+            try:
+                if dao.update_job(job_id, request.form):
+                    return redirect(url_for('manage_jobs'))
+            except ValidationError as val:
+                return render_template('edit_job.html', job=job, categories=categories, err_msg=str(val))
+            except Exception as ex:
+                return render_template('edit_job.html', job=job, categories=categories, err_msg=str(ex))
+
+        return render_template('edit_job.html', job=job, categories=categories)
 
 
 #========================================================================
+register_routes_nv3(app)
+
 if __name__ == "__main__":
     register_routes_nv1(app)
     app.run(debug=True)

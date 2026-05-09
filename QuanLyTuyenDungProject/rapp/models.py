@@ -130,7 +130,10 @@ if __name__ == '__main__':
         cand1 = User(name='Ứng viên 1', username='candidate1', password=password,
                      user_role=UserRole.CANDIDATE, phone="0123456789", email="candidate1@gmail.com")
 
-        db.session.add_all([admin, emp1, emp2, emp3, cand1])
+        #Tạo thêm candidate cand2
+        cand2 = User(name='Ứng viên 2', username='candidate2', password=password,
+                     user_role=UserRole.CANDIDATE, phone="0223456789", email="candidate2@gmail.com")
+        db.session.add_all([admin, emp1, emp2, emp3, cand1, cand2])
 
         db.session.flush()
 
@@ -147,15 +150,15 @@ if __name__ == '__main__':
             Job(title='Họa sĩ minh họa (Illustrator)', description='Vẽ nhân vật game 2D.',
                 salary=17000000, deadline=now + timedelta(days=30), category_id=c5.id, employer_id=emp1.id),
             Job(title='Biên dịch viên phim', description='Dịch thuật và làm sub phim Mỹ.',
-                salary=14000000, deadline=now + timedelta(days=18), category_id=c4.id, employer_id=emp1.id),
+                salary=14000000, deadline=now - timedelta(days=18), category_id=c4.id, employer_id=emp1.id),
 
             # --- NHÓM CỦA EMP2 (Marketing, TMĐT) ---
             Job(title='Chuyên viên SEO/SEM', description='Tối ưu từ khóa Google Ads.',
-                salary=15000000, deadline=now + timedelta(days=20), category_id=c2.id, employer_id=emp2.id),
+                salary=15000000, deadline=now - timedelta(days=20), category_id=c2.id, employer_id=emp2.id),
             Job(title='Content Creator (TikTok)', description='Xây dựng kịch bản video xu hướng.',
-                salary=12000000, deadline=now + timedelta(days=10), category_id=c2.id, employer_id=emp2.id),
+                salary=12000000, deadline=now, category_id=c2.id, employer_id=emp2.id),
             Job(title='Brand Manager', description='Xây dựng chiến lược thương hiệu.',
-                salary=40000000, deadline=now + timedelta(days=45), category_id=c2.id, employer_id=emp2.id),
+                salary=40000000, deadline=now - timedelta(days=45), category_id=c2.id, employer_id=emp2.id),
             Job(title='Quản trị TikTok Shop', description='Vận hành gian hàng và livestream.',
                 salary=13000000, deadline=now + timedelta(days=15), category_id=c6.id, employer_id=emp2.id),
             Job(title='Chuyên viên E-commerce', description='Quản lý gian hàng Shopee, Lazada.',

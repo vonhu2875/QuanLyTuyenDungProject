@@ -6,7 +6,7 @@ from cloudinary import uploader
 from flask import Flask
 from rapp import db
 from rapp.models import Job, User, UserRole, Category
-from rapp.index import register_routes_nv1, register_routes_nv2
+from rapp.index import register_routes_nv1, register_routes_nv2, register_routes_nv3
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
@@ -15,6 +15,7 @@ def create_app():
     app.secret_key = "nnasidhfona@@()s*(&^&%&^%i103498"
 
     register_routes_nv1(app=app)
+    register_routes_nv3(app=app)
     register_routes_nv2(app=app)
 
     db.init_app(app)

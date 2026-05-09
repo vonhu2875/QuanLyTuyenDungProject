@@ -1,6 +1,8 @@
 import pytest
 from datetime import datetime, timedelta
+from sqlalchemy import text
 
+from rapp import db
 from rapp.dao import update_application_status, get_applications_by_job, get_my_applications
 from rapp.exceptions import ValidationError
 from rapp.models import User, UserRole, Category, Job, Application, AppStatus
@@ -290,8 +292,8 @@ def test_tc3_7_accepted_to_rejected(setup_nv3, test_session):
 
 # ===== Nhóm 4: Kiểm tra điều kiện job (ràng buộc f) =====
 
-def test_tc4_1_hidden_job(setup_nv3, test_session):
-    """TC4.1: Cập nhật hồ sơ khi job đã bị ẩn (active=False) → ValidationError"""
+def test_tc4_1_hidden_job_cannot_update(setup_nv3, test_session):
+    """TC4.1: Job đã đóng (active=False) → không được cập nhật trạng thái"""
     d = setup_nv3
     d["job_a"].active = False
     test_session.commit()
@@ -306,16 +308,20 @@ def test_tc4_1_hidden_job(setup_nv3, test_session):
 
 
 def test_tc4_2_deleted_job(setup_nv3, test_session):
-    """TC4.2: Cập nhật hồ sơ khi job đã bị xóa (soft-delete: active=False) → ValidationError"""
+    """TC4.2: Job đã bị xóa khỏi DB → ValidationError"""
     d = setup_nv3
-    d["job_a"].active = False
+    app_id = d["app_a"].id
+    employer_id = d["employer_a"].id
+    job_id = d["job_a"].id
+    # Xóa trực tiếp bằng raw SQL để bypass ORM cascade (tránh set job_id=NULL)
+    test_session.execute(text("DELETE FROM job WHERE id = :id"), {"id": job_id})
     test_session.commit()
 
-    with pytest.raises(ValidationError, match="Không thể cập nhật — tin tuyển dụng không còn hoạt động!"):
+    with pytest.raises(ValidationError, match="Không thể cập nhật — tin tuyển dụng không còn tồn tại!"):
         update_application_status(
-            app_id=d["app_a"].id,
+            app_id=app_id,
             new_status="INTERVIEW",
-            updater_id=d["employer_a"].id,
+            updater_id=employer_id,
             updater_role=UserRole.EMPLOYER
         )
 

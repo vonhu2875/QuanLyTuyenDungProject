@@ -46,6 +46,9 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ url_for('manage_applications', job_id=j.id) }}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm" title="Xem hồ sơ ứng tuyển">
+                                    <i class="bi bi-people"></i>
+                                </a>
                                 <a href="/edit_job/{{ j.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>

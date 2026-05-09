@@ -30,7 +30,7 @@
                                 </div>
                                 <p class="mb-1 fw-bold text-dark">Nhấn để tải lên hoặc kéo thả file vào đây</p>
                                 <p class="text-muted small">Hỗ trợ định dạng .pdf (Tối đa 10MB)</p>
-                                <input type="file" name="cv_file" id="cv_file" class="d-none" accept=".pdf" required
+                                <input type="file" name="cv_file" id="cv_file" class="d-none" accept=".pdf"
                                        onchange="updateFileName(this)">
                             </div>
 
@@ -55,21 +55,6 @@
         if (input.files && input.files[0]) {
             display.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Đã chọn: ${input.files[0].name}`;
         }
-    }
-
-    // Tự động đóng thông báo sau 3 giây (Nếu có thông báo lỗi hiện ra)
-    document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alertElement) {
-                if (typeof bootstrap !== 'undefined') {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
-                    if (bsAlert) bsAlert.close();
-                } else {
-                    alertElement.style.display = 'none';
-                }
-            });
-        }, 3000);
-    });
+    };
 </script>
 {% endblock %}

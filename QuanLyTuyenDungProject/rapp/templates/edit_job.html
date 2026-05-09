@@ -3,7 +3,11 @@
 <div class="container my-5">
     <div class="card shadow-lg border-0 rounded-4 p-4 mx-auto" style="max-width: 700px;">
         <h2 class="fw-bold text-jobhub mb-4"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa tin tuyển dụng</h2>
-        <form method="POST">
+        <div id="errorAlert" class="alert alert-danger alert-dismissible fade show" style="display:none;">
+            <i class="bi bi-exclamation-triangle me-2"></i><span id="errorMsg"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <form id="editForm">
             <div class="mb-3">
                 <label class="form-label fw-bold">Tiêu đề công việc</label>
                 <input type="text" name="title" class="form-control" value="{{ job.title }}" required>
@@ -36,4 +40,21 @@
         </form>
     </div>
 </div>
+<script>
+    document.getElementById('editForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const res = await fetch(window.location.href, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams(new FormData(this))
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            document.getElementById('errorMsg').textContent = data.error;
+            document.getElementById('errorAlert').style.display = 'block';
+        }
+    });
+</script>
 {% endblock %}

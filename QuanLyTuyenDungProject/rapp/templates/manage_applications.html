@@ -1,0 +1,281 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<style>
+    .chevron-icon {
+        transition: transform 0.25s ease;
+    }
+    button[aria-expanded="true"] .chevron-icon {
+        transform: rotate(180deg);
+    }
+    .job-card:hover {
+        transform: none;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+        border-color: #dee2e6;
+    }
+</style>
+
+<div class="container my-5">
+
+    {# ── Header ── #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Quản lý hồ sơ ứng tuyển</h2>
+            <p class="text-muted mb-0">
+                <span class="badge bg-jobhub">{{ apps_by_job|length }}</span> tin tuyển dụng
+            </p>
+        </div>
+        <a href="{{ url_for('manage_jobs') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-card-list me-1"></i> Quản lý tin đăng
+        </a>
+    </div>
+
+    {# ── Flash messages ── #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {# ── Sort dropdown ── #}
+    {% if apps_by_job %}
+    <div class="d-flex justify-content-end mb-4">
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle"
+                    type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-sort-down me-1"></i><span id="sortLabel">Nhiều hồ sơ nhất</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item active" href="#" data-sort="apps-desc"><i class="bi bi-sort-numeric-down-alt me-2"></i>Nhiều hồ sơ nhất</a></li>
+                <li><a class="dropdown-item" href="#" data-sort="apps-asc"><i class="bi bi-sort-numeric-up me-2"></i>Ít hồ sơ nhất</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" data-sort="deadline-asc"><i class="bi bi-calendar-check me-2"></i>Hạn gần nhất</a></li>
+                <li><a class="dropdown-item" href="#" data-sort="deadline-desc"><i class="bi bi-calendar me-2"></i>Hạn xa nhất</a></li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Danh sách tin tuyển dụng ── #}
+    {% if apps_by_job %}
+    <div id="jobCardsContainer">
+        {% for job, apps in apps_by_job.items() %}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 job-card"
+             data-app-count="{{ apps|length }}"
+             data-deadline="{{ job.deadline.strftime('%Y-%m-%d') }}">
+
+            {# ── Header: thông tin tin đăng ── #}
+            <div class="ps-4 pe-3 py-3 {{ 'bg-light' if not job.active else 'bg-white' }}"
+                 style="display:grid; grid-template-columns:1fr 170px 155px auto; align-items:center; gap:12px;">
+
+                <div>
+                    <div class="fw-bold text-dark">
+                        {{ job.title }}
+                        {% if not job.active %}
+                        <span class="badge bg-secondary ms-1" style="font-size:.7rem;">Đã đóng</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Đăng ngày: {{ job.created_date.strftime('%d/%m/%Y') }}</small>
+                </div>
+
+                <span class="badge bg-light text-jobhub border border-jobhub-subtle px-3 py-2 text-center w-100">
+                    {{ job.category.name }}
+                </span>
+
+                <span class="small {{ 'text-danger fw-bold' if job.deadline < now else 'text-muted' }}">
+                    <i class="bi bi-calendar3 me-1"></i>Hạn: {{ job.deadline.strftime('%d/%m/%Y') }}
+                </span>
+
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm"
+                        type="button" data-bs-toggle="collapse"
+                        data-bs-target="#apps-{{ job.id }}" aria-expanded="false">
+                    <i class="bi bi-people me-1"></i>
+                    {{ apps|length }} hồ sơ
+                    <i class="bi bi-chevron-down ms-1 chevron-icon" style="font-size:.75rem;"></i>
+                </button>
+
+            </div>
+
+            {# ── Bảng hồ sơ (collapse) ── #}
+            <div class="collapse" id="apps-{{ job.id }}">
+                <div class="border-top">
+                    {% if apps %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3">#</th>
+                                    <th class="py-3">Ứng viên</th>
+                                    <th class="py-3">Ngày nộp</th>
+                                    <th class="py-3">Trạng thái</th>
+                                    <th class="py-3">CV</th>
+                                    <th class="py-3">Cập nhật trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in apps %}
+                                <tr>
+                                    <td class="ps-4 text-muted">{{ loop.index }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle overflow-hidden border bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                                                 style="width:34px;height:34px;">
+                                                {% if app.candidate.avatar %}
+                                                <img src="{{ app.candidate.avatar }}" alt="avatar"
+                                                     style="width:100%;height:100%;object-fit:cover;">
+                                                {% else %}
+                                                <i class="bi bi-person-fill text-secondary"></i>
+                                                {% endif %}
+                                            </div>
+                                            <span class="fw-medium">{{ app.candidate.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted">{{ app.created_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if app.status.name == 'SUBMITTED' %}
+                                            <span class="badge bg-secondary px-3 py-2">Chờ duyệt</span>
+                                        {% elif app.status.name == 'INTERVIEW' %}
+                                            <span class="badge bg-warning text-dark px-3 py-2">Phỏng vấn</span>
+                                        {% elif app.status.name == 'ACCEPTED' %}
+                                            <span class="badge bg-success px-3 py-2">Trúng tuyển</span>
+                                        {% elif app.status.name == 'REJECTED' %}
+                                            <span class="badge bg-danger px-3 py-2">Từ chối</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ app.cv_path }}" target="_blank"
+                                           class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>Xem CV
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if app.status.name not in ['ACCEPTED', 'REJECTED'] %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <select id="status-{{ app.id }}" class="form-select form-select-sm" style="min-width:130px;">
+                                                {% if app.status.name == 'SUBMITTED' %}
+                                                    <option value="INTERVIEW">Phỏng vấn</option>
+                                                    <option value="REJECTED">Từ chối</option>
+                                                {% elif app.status.name == 'INTERVIEW' %}
+                                                    <option value="ACCEPTED">Trúng tuyển</option>
+                                                    <option value="REJECTED">Từ chối</option>
+                                                {% endif %}
+                                            </select>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-jobhub rounded-pill px-3 shadow-sm btn-update-status"
+                                                    data-job-id="{{ job.id }}"
+                                                    data-app-id="{{ app.id }}">Lưu</button>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted small fst-italic">Đã kết thúc</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="px-4 py-3 text-muted small">
+                        <i class="bi bi-inbox me-1"></i>Chưa có hồ sơ nào được nộp cho vị trí này.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="text-center py-5">
+            <div class="text-muted mb-3">
+                <i class="bi bi-clipboard2-x fs-1"></i>
+            </div>
+            <p>Bạn chưa có tin tuyển dụng nào được đăng.</p>
+            <a href="/jobs" class="btn btn-outline-jobhub rounded-pill px-4">Bắt đầu đăng tin ngay</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var today = new Date().toISOString().split('T')[0];
+
+    function makeGroupHeader(label, colorClass, icon) {
+        var div = document.createElement('div');
+        div.className = 'group-divider d-flex align-items-center gap-2 mt-2 mb-3';
+        div.innerHTML = '<span class="fw-semibold small ' + colorClass + '">'
+            + '<i class="bi ' + icon + ' me-1"></i>' + label + '</span>'
+            + '<hr class="flex-grow-1 m-0 opacity-25">';
+        return div;
+    }
+
+    function sortCards(sortBy) {
+        var container = document.getElementById('jobCardsContainer');
+        container.querySelectorAll('.group-divider').forEach(function (d) { d.remove(); });
+
+        var allCards = Array.from(container.querySelectorAll('.job-card'));
+        var active  = allCards.filter(function (c) { return c.dataset.deadline >= today; });
+        var expired = allCards.filter(function (c) { return c.dataset.deadline <  today; });
+
+        function cmp(a, b) {
+            if (sortBy === 'apps-desc') return Number(b.dataset.appCount) - Number(a.dataset.appCount);
+            if (sortBy === 'apps-asc')  return Number(a.dataset.appCount) - Number(b.dataset.appCount);
+            if (sortBy === 'deadline-asc')  return a.dataset.deadline.localeCompare(b.dataset.deadline);
+            if (sortBy === 'deadline-desc') return b.dataset.deadline.localeCompare(a.dataset.deadline);
+            return 0;
+        }
+        active.sort(cmp);
+        expired.sort(cmp);
+
+        if (active.length) {
+            container.appendChild(makeGroupHeader('Còn hạn', 'text-success', 'bi-check-circle'));
+            active.forEach(function (c) { container.appendChild(c); });
+        }
+        if (expired.length) {
+            container.appendChild(makeGroupHeader('Quá hạn', 'text-danger', 'bi-calendar-x'));
+            expired.forEach(function (c) { container.appendChild(c); });
+        }
+    }
+
+    // ── Sort dropdown ──
+    document.querySelectorAll('[data-sort]').forEach(function (item) {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('[data-sort]').forEach(function (i) { i.classList.remove('active'); });
+            this.classList.add('active');
+            document.getElementById('sortLabel').textContent = this.textContent.trim();
+            sortCards(this.dataset.sort);
+        });
+    });
+
+    // ── PATCH cập nhật trạng thái hồ sơ ──
+    document.querySelectorAll('.btn-update-status').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var jobId = this.dataset.jobId;
+            var appId = this.dataset.appId;
+            var formData = new FormData();
+            formData.append('status', document.getElementById('status-' + appId).value);
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+            fetch('/jobs/' + jobId + '/applications/' + appId + '/status', {
+                method: 'PATCH', body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function () { window.location.reload(); })
+            .catch(function () { window.location.reload(); });
+        });
+    });
+
+    sortCards('apps-desc');
+});
+</script>
+
+{% endblock %}

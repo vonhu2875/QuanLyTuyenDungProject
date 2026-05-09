@@ -124,9 +124,7 @@ def add_user(name, username, password, avatar, email, phone, user_role):
         raise Exception("Không thể thêm user!")
     return u
 
-def add_job(title, description, salary, deadline, category_id, employer_id, user_role):
-    if user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
-        raise ValidationError("Bạn không có quyền đăng tin!")
+def _validate_job_fields(title, salary, deadline):
     if not title:
         raise ValidationError("Phải có tiêu đề!")
     title = title.strip()
@@ -136,9 +134,8 @@ def add_job(title, description, salary, deadline, category_id, employer_id, user
         raise ValidationError("Tiêu đề chỉ tối đa 255 ký tự!")
     try:
         salary = float(salary)
-    except:
+    except (ValueError, TypeError):
         raise ValidationError("Lương phải là số")
-
     if salary <= 0:
         raise ValidationError("Lương phải > 0!")
     now = datetime.now()
@@ -147,6 +144,12 @@ def add_job(title, description, salary, deadline, category_id, employer_id, user
     if deadline > now + timedelta(days=365):
         raise ValidationError("Hạn deadline chỉ tối đa 1 năm kể từ ngày tạo tin!")
     deadline = deadline.replace(hour=23, minute=59, second=59)
+    return title, salary, deadline
+
+def add_job(title, description, salary, deadline, category_id, employer_id, user_role):
+    if user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+        raise ValidationError("Bạn không có quyền đăng tin!")
+    title, salary, deadline = _validate_job_fields(title, salary, deadline)
     if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == employer_id).first():
         raise DuplicateError("Tin tuyển dụng đã tồn tại!")
 
@@ -270,53 +273,45 @@ def get_my_applications(candidate_id):
 
 
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
-
 def get_application_by_id(app_id):
     return Application.query.get(app_id)
 
 def get_applications_by_job(job_id):
     return Application.query.filter_by(job_id=job_id).all()
 
+def _check_update_permission(updater_role, updater_id, job):
+    if updater_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
+        raise ValidationError("Bạn không có quyền cập nhật hồ sơ!")
+    if not job:
+        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn tồn tại!")
+    if not job.active:
+        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn hoạt động!")
+    if updater_role == UserRole.EMPLOYER and job.employer_id != updater_id:
+        raise ValidationError("Bạn không có quyền cập nhật hồ sơ này!")
+
+def _validate_status_transition(current_status, new_status):
+    if current_status == AppStatus.SUBMITTED and new_status == AppStatus.ACCEPTED:
+        raise ValidationError("Phải chuyển qua trạng thái Phỏng vấn trước!")
+    if current_status == AppStatus.REJECTED and new_status == AppStatus.INTERVIEW:
+        raise ValidationError("Không thể chuyển từ Từ chối sang Phỏng vấn!")
+    if current_status in [AppStatus.ACCEPTED, AppStatus.REJECTED]:
+        raise ValidationError("Hồ sơ đã ở trạng thái cuối, không thể thay đổi!")
+
 def update_application_status(app_id, new_status, updater_id, updater_role):
-    # 1. Tìm hồ sơ
     application = Application.query.get(app_id)
     if not application:
         raise ValidationError("Hồ sơ không tồn tại!")
 
-    # 2. Phân quyền
-    if updater_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
-        raise ValidationError("Bạn không có quyền cập nhật hồ sơ!")
-
     job = Job.query.get(application.job_id)
+    _check_update_permission(updater_role, updater_id, job)
 
-    # EMPLOYER chỉ được cập nhật hồ sơ thuộc job của mình
-    if updater_role == UserRole.EMPLOYER and (not job or job.employer_id != updater_id):
-        raise ValidationError("Bạn không có quyền cập nhật hồ sơ này!")
-
-    # 3. Kiểm tra job còn hoạt động (ràng buộc f)
-    if not job or not job.active:
-        raise ValidationError("Không thể cập nhật — tin tuyển dụng không còn hoạt động!")
-
-    # Parse new_status từ string sang enum
     if isinstance(new_status, str):
         try:
             new_status = AppStatus[new_status]
         except KeyError:
             raise ValidationError("Trạng thái không hợp lệ!")
 
-    current_status = application.status
-
-    # 4. SUBMITTED → ACCEPTED phải qua INTERVIEW trước (ràng buộc e)
-    if current_status == AppStatus.SUBMITTED and new_status == AppStatus.ACCEPTED:
-        raise ValidationError("Phải chuyển qua trạng thái Phỏng vấn trước!")
-
-    # 5. REJECTED → INTERVIEW không được phép (ràng buộc c — kiểm tra trước terminal state)
-    if current_status == AppStatus.REJECTED and new_status == AppStatus.INTERVIEW:
-        raise ValidationError("Không thể chuyển từ Từ chối sang Phỏng vấn!")
-
-    # 6. Trạng thái cuối không thể thay đổi (ràng buộc d)
-    if current_status in [AppStatus.ACCEPTED, AppStatus.REJECTED]:
-        raise ValidationError("Hồ sơ đã ở trạng thái cuối, không thể thay đổi!")
+    _validate_status_transition(application.status, new_status)
 
     application.status = new_status
     try:
@@ -343,18 +338,19 @@ def toggle_job_active(job_id):
 
 def update_job(job_id, data):
     job = Job.query.get(job_id)
-    if job:
-        job.title = data.get('title')
-        job.description = data.get('description')
-        job.salary = float(data.get('salary', 0))
-        job.category_id = int(data.get('category'))
+    if not job:
+        return False
 
-        # Xử lý ngày tháng
-        deadline_str = data.get('deadline')
-        if deadline_str:
-            job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+    deadline_str = data.get('deadline')
+    deadline = datetime.strptime(deadline_str, '%Y-%m-%d') if deadline_str else job.deadline
 
-        db.session.commit()
-        return True
-    return False
+    title, salary, deadline = _validate_job_fields(data.get('title'), data.get('salary'), deadline)
+
+    job.title = title
+    job.description = data.get('description')
+    job.salary = salary
+    job.deadline = deadline
+    job.category_id = int(data.get('category'))
+    db.session.commit()
+    return True
 

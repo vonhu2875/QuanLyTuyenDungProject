@@ -22,7 +22,7 @@ def test_manage_applications_employer_own_job(test_client, mocker):
     mocker.patch('rapp.index.dao.get_applications_by_job', return_value=[])
     mock_render = mocker.patch('rapp.index.render_template', return_value='OK')
 
-    res = test_client.get('/jobs/1/applications')
+    res = test_client.get('/jobs/1/manage-applications')
 
     assert res.status_code == 200
     args, _ = mock_render.call_args
@@ -44,7 +44,7 @@ def test_manage_applications_employer_other_job(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('rapp.index.dao.get_job_by_id', return_value=FakeJob())
 
-    res = test_client.get('/jobs/2/applications')
+    res = test_client.get('/jobs/2/manage-applications')
 
     assert res.status_code == 302
     assert 'manage_jobs' in res.location
@@ -59,7 +59,7 @@ def test_manage_applications_candidate_redirect(test_client, mocker):
 
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
 
-    res = test_client.get('/jobs/1/applications')
+    res = test_client.get('/jobs/1/manage-applications')
 
     assert res.status_code == 302
     assert res.location.endswith('/')
@@ -75,7 +75,7 @@ def test_manage_applications_job_not_found(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('rapp.index.dao.get_job_by_id', return_value=None)
 
-    res = test_client.get('/jobs/999/applications')
+    res = test_client.get('/jobs/999/manage-applications')
 
     assert res.status_code == 302
     assert 'manage_jobs' in res.location
@@ -98,7 +98,7 @@ def test_manage_applications_admin_any_job(test_client, mocker):
     mocker.patch('rapp.index.dao.get_applications_by_job', return_value=[])
     mock_render = mocker.patch('rapp.index.render_template', return_value='OK')
 
-    res = test_client.get('/jobs/1/applications')
+    res = test_client.get('/jobs/1/manage-applications')
 
     assert res.status_code == 200
     args, _ = mock_render.call_args

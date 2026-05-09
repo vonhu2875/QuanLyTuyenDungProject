@@ -138,19 +138,19 @@ if __name__ == '__main__':
         db.session.flush()
 
         # 4. Thêm Việc làm
-        now = datetime.now()
+        now = datetime.now().replace(hour=23, minute=59, second=59)
         jobs_data = [
             # --- NHÓM CỦA EMP1 (CNTT, Thiết kế, Ngôn ngữ) ---
             Job(title='Lập trình viên Java (Senior)', description='Phát triển hệ thống Microservices.',
-                salary=35000000, deadline=now + timedelta(days=30), category_id=c1.id, employer_id=emp1.id),
+                salary=35000000, deadline= (now + timedelta(days=30)), category_id=c1.id, employer_id=emp1.id),
             Job(title='Chuyên viên Cyber Security', description='Bảo mật hệ thống Cloud.',
-                salary=28000000, deadline=now + timedelta(days=25), category_id=c1.id, employer_id=emp1.id),
+                salary=28000000, deadline= now + timedelta(days=25), category_id=c1.id, employer_id=emp1.id),
             Job(title='UI/UX Designer (Mobile App)', description='Thiết kế giao diện bằng Figma.',
-                salary=20000000, deadline=now + timedelta(days=22), category_id=c5.id, employer_id=emp1.id),
+                salary=20000000, deadline= now + timedelta(days=22), category_id=c5.id, employer_id=emp1.id),
             Job(title='Họa sĩ minh họa (Illustrator)', description='Vẽ nhân vật game 2D.',
-                salary=17000000, deadline=now + timedelta(days=30), category_id=c5.id, employer_id=emp1.id),
+                salary=17000000, deadline= now + timedelta(days=30), category_id=c5.id, employer_id=emp1.id),
             Job(title='Biên dịch viên phim', description='Dịch thuật và làm sub phim Mỹ.',
-                salary=14000000, deadline=now - timedelta(days=18), category_id=c4.id, employer_id=emp1.id),
+                salary=14000000, deadline= now - timedelta(days=18), category_id=c4.id, employer_id=emp1.id),
 
             # --- NHÓM CỦA EMP2 (Marketing, TMĐT) ---
             Job(title='Chuyên viên SEO/SEM', description='Tối ưu từ khóa Google Ads.',

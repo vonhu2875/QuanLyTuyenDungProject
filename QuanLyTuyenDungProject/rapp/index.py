@@ -297,9 +297,8 @@ def register_routes_nv3(app):
 
 
 #========================================================================
-register_routes_nv3(app)
-
 if __name__ == "__main__":
     register_routes_nv1(app)
     register_routes_nv2(app)
+    register_routes_nv3(app)
     app.run(debug=True)

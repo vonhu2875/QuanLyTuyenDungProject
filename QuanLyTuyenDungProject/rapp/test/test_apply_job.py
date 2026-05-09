@@ -188,3 +188,34 @@ def test_apply_filename_special_chars(test_session, job_to_apply, sample_candida
         assert app is not None
         # Kiểm tra xem bản ghi vẫn được tạo bình thường bất kể tên file khó
         assert app.job_id == job_to_apply.id
+
+# 12. TEST LỖI: Up lên Cloudinary thành công nhưng khi lưu xuống Database lỗi
+def test_apply_database_commit_error(test_session, job_to_apply, sample_candidate):
+    cv = create_mock_file("my_cv.pdf", content=b"%PDF-1.5")
+
+    with patch('cloudinary.uploader.upload') as mock_upload, \
+            patch('rapp.db.session.commit') as mock_commit:
+        mock_upload.return_value = {'secure_url': 'https://link.pdf'}
+        # Giả lập lỗi khi commit vào database
+        mock_commit.side_effect = Exception("Database is down")
+
+        with pytest.raises(Exception, match="Lỗi hệ thống"):
+            apply_for_job(job_to_apply.id, sample_candidate.id, sample_candidate.user_role, cv)
+
+# 13. Nộp hồ sơ vào giấy cuối
+def test_apply_exactly_at_deadline(test_session, job_to_apply, sample_candidate):
+    # Thiết lập deadline là 1 giây trước
+    job_to_apply.deadline = datetime.now() - timedelta(seconds=1)
+    test_session.commit()
+
+    cv = create_mock_file("cv.pdf", content=b"%PDF")
+    with pytest.raises(ValidationError, match="Đã hết hạn nộp hồ sơ!"):
+        apply_for_job(job_to_apply.id, sample_candidate.id, sample_candidate.user_role, cv)
+
+#14. TEST LỖI: candidate nộp job không tồn tại
+def test_apply_non_existent_job(test_session, sample_candidate):
+    cv = create_mock_file("cv.pdf", content=b"%PDF")
+    invalid_job_id = 999999
+
+    with pytest.raises(ValidationError, match="Tin tuyển dụng không tồn tại!"):
+        apply_for_job(invalid_job_id, sample_candidate.id, sample_candidate.user_role, cv)

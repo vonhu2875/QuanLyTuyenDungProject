@@ -114,78 +114,79 @@ def load_user(user_id):
 #=========================Nghiệp vụ 2: Ngại và Hiền (Bé Hà)==========================
 
 # JOB DETAILS
-@app.route('/jobs/<int:job_id>')
-def job_detail(job_id):
-    job = dao.get_job_by_id(job_id)
+def register_routes_nv2(app):
+    @app.route('/jobs/<int:job_id>')
+    def job_detail(job_id):
+        job = dao.get_job_by_id(job_id)
 
-    applied = False
+        applied = False
 
-    if current_user.is_authenticated and current_user.user_role == UserRole.CANDIDATE:
-        applied = dao.check_applied(current_user.id, job_id)
+        if current_user.is_authenticated and current_user.user_role == UserRole.CANDIDATE:
+            applied = dao.check_applied(current_user.id, job_id)
 
-    return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole)
+        return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole)
 
-# Nghiệp vụ chính 2: Nộp hồ sơ
-@app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
-@login_required
-def apply_job(job_id):
-    job = dao.get_job_by_id(job_id)
+    # Nghiệp vụ chính 2: Nộp hồ sơ
+    @app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
+    @login_required
+    def apply_job(job_id):
+        job = dao.get_job_by_id(job_id)
 
-    # 1. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
-    if request.method == 'POST':
-        try:
-            cv_file = request.files.get('cv_file')
-            dao.apply_for_job(
-                job_id=job_id,
-                candidate_id=current_user.id,
-                user_role=current_user.user_role,
-                cv_file=cv_file
-            )
-            # THÀNH CÔNG: Trả về trang nộp và kèm tin nhắn xanh
-            succ_msg = "Nộp hồ sơ thành công!"
-            return render_template('apply_job.html', job=job, succ_msg=succ_msg)
+        # 1. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
+        if request.method == 'POST':
+            try:
+                cv_file = request.files.get('cv_file')
+                dao.apply_for_job(
+                    job_id=job_id,
+                    candidate_id=current_user.id,
+                    user_role=current_user.user_role,
+                    cv_file=cv_file
+                )
+                # THÀNH CÔNG: Trả về trang nộp và kèm tin nhắn xanh
+                succ_msg = "Nộp hồ sơ thành công!"
+                return render_template('apply_job.html', job=job, succ_msg=succ_msg)
 
-        except (ValidationError, DuplicateError) as ex:
-            # LỖI NGHIỆP VỤ: Trả về trang nộp và kèm tin nhắn đỏ
-            return render_template('apply_job.html', job=job, err_msg=str(ex))
+            except (ValidationError, DuplicateError) as ex:
+                # LỖI NGHIỆP VỤ: Trả về trang nộp và kèm tin nhắn đỏ
+                return render_template('apply_job.html', job=job, err_msg=str(ex))
 
-        except Exception as ex:
-            # LỖI HỆ THỐNG
-            err_msg = "Có lỗi xảy ra, vui lòng thử lại."
-            return render_template('apply_job.html', job=job, err_msg=err_msg)
+            except Exception as ex:
+                # LỖI HỆ THỐNG
+                err_msg = "Có lỗi xảy ra, vui lòng thử lại."
+                return render_template('apply_job.html', job=job, err_msg=err_msg)
 
-    # 2. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
-    return render_template('apply_job.html', job=job)
+        # 2. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
+        return render_template('apply_job.html', job=job)
 
-# Liên hệ (Contact)
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
+    # Liên hệ (Contact)
+    @app.route('/contact')
+    def contact():
+        return render_template('contact.html')
 
-#Hồ sơ cá nhân của CANDIDATE
-@app.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    if request.method == 'POST':
-        if dao.update_user_profile(current_user.id, request.form):
-            succ_msg = "Cập nhật hồ sơ thành công!"
-            return render_template('profile.html', succ_msg=succ_msg)
-        else:
-            err_msg = "Có lỗi xảy ra khi cập nhật."
-            return render_template('profile.html', err_msg=err_msg)
+    #Hồ sơ cá nhân của CANDIDATE
+    @app.route('/profile', methods=['GET', 'POST'])
+    @login_required
+    def profile():
+        if request.method == 'POST':
+            if dao.update_user_profile(current_user.id, request.form):
+                succ_msg = "Cập nhật hồ sơ thành công!"
+                return render_template('profile.html', succ_msg=succ_msg)
+            else:
+                err_msg = "Có lỗi xảy ra khi cập nhật."
+                return render_template('profile.html', err_msg=err_msg)
 
-    return render_template('profile.html')
+        return render_template('profile.html')
 
-# Việc làm đã nộp
-@app.route('/profile/applications')
-@login_required
-def my_applications():
-    if current_user.user_role != UserRole.CANDIDATE:
-        return redirect(url_for('index'))
+    # Việc làm đã nộp
+    @app.route('/profile/applications')
+    @login_required
+    def my_applications():
+        if current_user.user_role != UserRole.CANDIDATE:
+            return redirect(url_for('index'))
 
-    applications = dao.get_my_applications(current_user.id)
+        applications = dao.get_my_applications(current_user.id)
 
-    return render_template('my_applications.html', applications=applications, UserRole=UserRole)
+        return render_template('my_applications.html', applications=applications, UserRole=UserRole)
 
 
 
@@ -300,4 +301,5 @@ register_routes_nv3(app)
 
 if __name__ == "__main__":
     register_routes_nv1(app)
+    register_routes_nv2(app)
     app.run(debug=True)

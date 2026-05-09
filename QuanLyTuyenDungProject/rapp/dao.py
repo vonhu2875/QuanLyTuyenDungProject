@@ -26,7 +26,14 @@ def normalize(text=None):
     text = text.encode('ascii', 'ignore').decode('utf-8')
     return text
 
+def update_active_job():
+    expired_jobs = Job.query.filter(Job.active == True, Job.deadline < datetime.now()).all()
+    for job in expired_jobs:
+        job.active = False
+    db.session.commit()
+
 def load_jobs(cate_id=None, kw=None, page=None):
+    update_active_job()
     query = Job.query
     if cate_id:
         query = query.filter(Job.category_id.__eq__(cate_id))

@@ -341,7 +341,7 @@ def update_job(job_id, data):
     if not job:
         return False
 
-    deadline_str = data.get('deadline')
+    deadline_str = data.get('deadline', '').strip()
     deadline = datetime.strptime(deadline_str, '%Y-%m-%d') if deadline_str else job.deadline
 
     title, salary, deadline = _validate_job_fields(data.get('title'), data.get('salary'), deadline)

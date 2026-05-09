@@ -119,12 +119,13 @@ def register_routes_nv2(app):
     def job_detail(job_id):
         job = dao.get_job_by_id(job_id)
 
+        now = datetime.now()
         applied = False
 
         if current_user.is_authenticated and current_user.user_role == UserRole.CANDIDATE:
             applied = dao.check_applied(current_user.id, job_id)
 
-        return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole)
+        return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole, now=now)
 
     # Nghiệp vụ chính 2: Nộp hồ sơ
     @app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
@@ -297,9 +298,10 @@ def register_routes_nv3(app):
 
 
 #========================================================================
-register_routes_nv3(app)
+
 
 if __name__ == "__main__":
     register_routes_nv1(app)
     register_routes_nv2(app)
+    register_routes_nv3(app)
     app.run(debug=True)

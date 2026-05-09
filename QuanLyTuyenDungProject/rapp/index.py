@@ -126,7 +126,7 @@ def job_detail(job_id):
     return render_template('job_details.html', job=job, applied=applied, UserRole=UserRole)
 
 # Nghiệp vụ chính 2: Nộp hồ sơ
-@app.route('/apply-job/<int:job_id>', methods=['GET', 'POST'])
+@app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
 @login_required
 def apply_job(job_id):
     job = dao.get_job_by_id(job_id)

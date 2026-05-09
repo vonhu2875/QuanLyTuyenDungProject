@@ -8,7 +8,7 @@ from unicodedata import category
 from rapp import dao, app, login, db
 from rapp.dao import add_user, add_job
 from rapp.exceptions import ValidationError, DuplicateError
-from rapp.models import User, UserRole, Job, Category
+from rapp.models import User, UserRole, Job, Category, Application
 
 def register_routes_nv1(app):
     #TRANG CHỦ
@@ -272,7 +272,8 @@ def register_routes_nv3(app):
     @login_required
     def delete_job(job_id):
         job = Job.query.get_or_404(job_id)
-        if job.employer_id == current_user.id:
+        if current_user.user_role == UserRole.ADMIN or job.employer_id == current_user.id:
+            Application.query.filter_by(job_id=job_id).delete()
             db.session.delete(job)
             db.session.commit()
         return redirect(url_for('manage_jobs'))

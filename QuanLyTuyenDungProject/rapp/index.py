@@ -193,8 +193,16 @@ def register_routes_nv2(app):
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 def register_routes_nv3(app):
+    @app.route('/manage-applications')
+    @login_required
+    def all_applications():
+        if current_user.user_role == UserRole.CANDIDATE:
+            return redirect('/')
+        apps_by_job = dao.get_apps_by_employer(current_user.id, current_user.user_role)
+        return render_template('manage_applications.html', apps_by_job=apps_by_job, now=datetime.now())
+
     # Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
-    @app.route('/jobs/<int:job_id>/applications')
+    @app.route('/jobs/<int:job_id>/manage-applications')
     @login_required
     def manage_applications(job_id):
         if current_user.user_role == UserRole.CANDIDATE:

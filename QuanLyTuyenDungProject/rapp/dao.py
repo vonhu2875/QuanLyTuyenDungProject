@@ -286,6 +286,13 @@ def get_application_by_id(app_id):
 def get_applications_by_job(job_id):
     return Application.query.filter_by(job_id=job_id).all()
 
+def get_apps_by_employer(employer_id, user_role):
+    if user_role == UserRole.ADMIN:
+        jobs = Job.query.all()
+    else:
+        jobs = Job.query.filter_by(employer_id=employer_id).all()
+    return {job: Application.query.filter_by(job_id=job.id).all() for job in jobs}
+
 def _check_update_permission(updater_role, updater_id, job):
     if updater_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:
         raise ValidationError("Bạn không có quyền cập nhật hồ sơ!")

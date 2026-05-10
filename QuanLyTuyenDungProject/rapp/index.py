@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
 
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from unicodedata import category
 
@@ -130,8 +130,11 @@ def register_routes_nv2(app):
     @app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
     @login_required
     def apply_job(job_id):
-        job = dao.get_job_by_id(job_id)
 
+        if current_user.user_role != UserRole.CANDIDATE:
+            abort(403)
+
+        job = Job.query.get_or_404(job_id)
         # 1. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
         if request.method == 'POST':
             try:

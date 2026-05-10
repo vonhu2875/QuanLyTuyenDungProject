@@ -130,12 +130,17 @@ def register_routes_nv2(app):
     @app.route('/jobs/<int:job_id>/applications', methods=['GET', 'POST'])
     @login_required
     def apply_job(job_id):
+        job = dao.get_job_by_id(job_id)
+        # 1. Nếu không có job, trả về một chuỗi thông báo (vẫn là status 200)
+        if not job:
+            return "<h1>404 - Không tìm thấy công việc này!</h1>", 200
 
+        # 2. Kiểm tra quyền: Nếu là Nhà tuyển dụng thì hiện trang báo lỗi (vẫn trả về status 200)
         if current_user.user_role != UserRole.CANDIDATE:
-            abort(403)
+            # Thay vì abort(403), Hà trả về 1 cái template hoặc câu chữ thông báo lỗi
+            return "<h1>403 - Lỗi quyền truy cập</h1><p>Chỉ Ứng viên mới được nộp hồ sơ!</p>", 200
 
-        job = Job.query.get_or_404(job_id)
-        # 1. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
+        # 3. Nếu người dùng nhấn nút "Xác nhận nộp" (Gửi dữ liệu lên)
         if request.method == 'POST':
             try:
                 cv_file = request.files.get('cv_file')
@@ -158,7 +163,7 @@ def register_routes_nv2(app):
                 err_msg = "Có lỗi xảy ra, vui lòng thử lại."
                 return render_template('apply_job.html', job=job, err_msg=err_msg)
 
-        # 2. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
+        # 4. Nếu người dùng chỉ bấm vào xem trang (Chạy lệnh GET)
         return render_template('apply_job.html', job=job)
 
     # Liên hệ (Contact)

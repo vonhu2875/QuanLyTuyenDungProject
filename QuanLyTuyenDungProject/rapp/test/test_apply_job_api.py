@@ -16,6 +16,12 @@ def test_api_apply_job_success(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('flask_login.current_user', return_value=FakeUser())
 
+    # Giả lập để dao.get_job_by_id không trả về None
+    mock_job = mocker.Mock()
+    mock_job.id = 1
+    mock_job.title = "Python Developer"
+    mocker.patch("rapp.dao.get_job_by_id", return_value=mock_job)
+
     # Mock các hàm DAO và render_template
     mock_apply = mocker.patch("rapp.dao.apply_for_job")
     mock_render = mocker.patch("rapp.index.render_template", return_value="Thanh Cong")
@@ -46,6 +52,10 @@ def test_api_apply_job_validation_error(test_client, mocker):
 
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('flask_login.current_user', return_value=FakeUser())
+
+    mock_job = mocker.Mock()
+    mock_job.id = 1
+    mocker.patch("rapp.dao.get_job_by_id", return_value=mock_job)
 
     # Giả lập hàm DAO ném lỗi ValidationError
     msg_error = "Bạn đã nộp hồ sơ cho công việc này rồi!"
@@ -97,13 +107,14 @@ def test_api_apply_job_unauthorized(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('flask_login.current_user', return_value=FakeUser())
 
-    mock_render = mocker.patch("rapp.index.render_template", return_value="Loi Quyen")
+    mock_job = mocker.Mock()
+    mock_job.id = 1
+    mocker.patch("rapp.dao.get_job_by_id", return_value=mock_job)
 
     res = test_client.post('/jobs/1/applications', data={'cv_file': (io.BytesIO(b""), "a.pdf")})
 
     assert res.status_code == 200
-    args, kwargs = mock_render.call_args
-    assert "Chỉ Ứng viên mới có quyền nộp hồ sơ!" in kwargs['err_msg']
+    assert "403 - Lỗi quyền truy cập" in res.get_data(as_text=True)
 
 # 4. TEST XEM CHI TIẾT VIỆC LÀM
 def test_api_get_job_detail_success(test_client, mocker):

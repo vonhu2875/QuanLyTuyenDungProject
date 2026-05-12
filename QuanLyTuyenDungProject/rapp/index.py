@@ -77,7 +77,7 @@ def register_routes_nv1(app):
 
 
     #Nghiệp vụ chính 1: Đăng tin tuyển dụng
-    @app.route('/jobs')
+    @app.route('/jobs/create')
     @login_required
     def job_view():
         if current_user.user_role not in [UserRole.EMPLOYER, UserRole.ADMIN]:

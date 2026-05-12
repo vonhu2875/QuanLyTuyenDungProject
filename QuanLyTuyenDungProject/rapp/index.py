@@ -196,8 +196,6 @@ def register_routes_nv2(app):
 
         return render_template('my_applications.html', applications=applications, UserRole=UserRole)
 
-
-
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 def register_routes_nv3(app):

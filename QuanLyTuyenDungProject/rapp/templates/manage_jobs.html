@@ -49,23 +49,22 @@
                                 <a href="{{ url_for('manage_applications', job_id=j.id) }}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm" title="Xem hồ sơ ứng tuyển">
                                     <i class="bi bi-people"></i>
                                 </a>
-                                <a href="/edit_job/{{ j.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
+                                <a href="/jobs/{{ j.id }}/edit" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
-                                <form action="/toggle_job_status/{{ j.id }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if j.active else 'btn-outline-success' }} rounded-pill px-3 shadow-sm">
-                                        <i class="bi {{ 'bi-eye-slash' if j.active else 'bi-eye' }}"></i>
-                                        {{ 'Đóng tin' if j.active else 'Mở lại' }}
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        class="btn btn-sm {{ 'btn-outline-warning' if j.active else 'btn-outline-success' }} rounded-pill px-3 shadow-sm btn-toggle"
+                                        data-job-id="{{ j.id }}">
+                                    <i class="bi {{ 'bi-eye-slash' if j.active else 'bi-eye' }}"></i>
+                                    {{ 'Đóng tin' if j.active else 'Mở lại' }}
+                                </button>
 
-                                <form action="/delete_job/{{ j.id }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa tin này không?')">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm btn-delete"
+                                        data-job-id="{{ j.id }}">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -85,5 +84,23 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.btn-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        fetch('/jobs/' + this.dataset.jobId + '/active', { method: 'PATCH' })
+            .then(function () { window.location.reload(); });
+    });
+});
+
+document.querySelectorAll('.btn-delete').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        if (confirm('Bạn có chắc muốn xóa tin này không?')) {
+            fetch('/jobs/' + this.dataset.jobId, { method: 'DELETE' })
+                .then(function () { window.location.reload(); });
+        }
+    });
+});
+</script>
 
 {% endblock %}

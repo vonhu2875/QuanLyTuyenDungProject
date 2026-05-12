@@ -25,9 +25,6 @@
                 <span class="badge bg-jobhub">{{ apps_by_job|length }}</span> tin tuyển dụng
             </p>
         </div>
-        <a href="{{ url_for('manage_jobs') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">
-            <i class="bi bi-card-list me-1"></i> Quản lý tin đăng
-        </a>
     </div>
 
     {# ── Flash messages ── #}
@@ -42,31 +39,11 @@
         {% endif %}
     {% endwith %}
 
-    {# ── Sort dropdown ── #}
-    {% if apps_by_job %}
-    <div class="d-flex justify-content-end mb-4">
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle"
-                    type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-sort-down me-1"></i><span id="sortLabel">Nhiều hồ sơ nhất</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="sortDropdown">
-                <li><a class="dropdown-item active" href="#" data-sort="apps-desc"><i class="bi bi-sort-numeric-down-alt me-2"></i>Nhiều hồ sơ nhất</a></li>
-                <li><a class="dropdown-item" href="#" data-sort="apps-asc"><i class="bi bi-sort-numeric-up me-2"></i>Ít hồ sơ nhất</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" data-sort="deadline-asc"><i class="bi bi-calendar-check me-2"></i>Hạn gần nhất</a></li>
-                <li><a class="dropdown-item" href="#" data-sort="deadline-desc"><i class="bi bi-calendar me-2"></i>Hạn xa nhất</a></li>
-            </ul>
-        </div>
-    </div>
-    {% endif %}
-
     {# ── Danh sách tin tuyển dụng ── #}
     {% if apps_by_job %}
     <div id="jobCardsContainer">
         {% for job, apps in apps_by_job.items() %}
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 job-card"
-             data-app-count="{{ apps|length }}"
              data-deadline="{{ job.deadline.strftime('%Y-%m-%d') }}">
 
             {# ── Header: thông tin tin đăng ── #}
@@ -217,23 +194,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return div;
     }
 
-    function sortCards(sortBy) {
+    function groupCards() {
         var container = document.getElementById('jobCardsContainer');
         container.querySelectorAll('.group-divider').forEach(function (d) { d.remove(); });
 
         var allCards = Array.from(container.querySelectorAll('.job-card'));
         var active  = allCards.filter(function (c) { return c.dataset.deadline >= today; });
         var expired = allCards.filter(function (c) { return c.dataset.deadline <  today; });
-
-        function cmp(a, b) {
-            if (sortBy === 'apps-desc') return Number(b.dataset.appCount) - Number(a.dataset.appCount);
-            if (sortBy === 'apps-asc')  return Number(a.dataset.appCount) - Number(b.dataset.appCount);
-            if (sortBy === 'deadline-asc')  return a.dataset.deadline.localeCompare(b.dataset.deadline);
-            if (sortBy === 'deadline-desc') return b.dataset.deadline.localeCompare(a.dataset.deadline);
-            return 0;
-        }
-        active.sort(cmp);
-        expired.sort(cmp);
 
         if (active.length) {
             container.appendChild(makeGroupHeader('Còn hạn', 'text-success', 'bi-check-circle'));
@@ -244,17 +211,6 @@ document.addEventListener('DOMContentLoaded', function () {
             expired.forEach(function (c) { container.appendChild(c); });
         }
     }
-
-    // ── Sort dropdown ──
-    document.querySelectorAll('[data-sort]').forEach(function (item) {
-        item.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.querySelectorAll('[data-sort]').forEach(function (i) { i.classList.remove('active'); });
-            this.classList.add('active');
-            document.getElementById('sortLabel').textContent = this.textContent.trim();
-            sortCards(this.dataset.sort);
-        });
-    });
 
     // ── PATCH cập nhật trạng thái hồ sơ ──
     document.querySelectorAll('.btn-update-status').forEach(function (btn) {
@@ -274,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    sortCards('apps-desc');
+    groupCards();
 });
 </script>
 

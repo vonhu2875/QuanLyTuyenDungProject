@@ -65,7 +65,7 @@ def register_routes_nv1(app):
             err_msg = "Mật khẩu không khớp!"
             return render_template('register.html', err_msg=err_msg,UserRole = users_show)
         try:
-            add_user(name=data.get('name'), username=data.get('username'), password=password, avatar=request.files.get('avatar'),
+            dao.add_user(name=data.get('name'), username=data.get('username'), password=password, avatar=request.files.get('avatar'),
                      email=data.get('email'), phone=data.get('phone'), user_role=UserRole[data.get('user_role')])
             return redirect('/login')
         except ValidationError as val:
@@ -97,7 +97,7 @@ def register_routes_nv1(app):
         deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
         category_id = int(data.get('category_id'))
         try:
-            add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id, employer_id=current_user.id,user_role = current_user.user_role)
+            dao.add_job(title=title, description=description, salary=salary,deadline=deadline, category_id=category_id, employer_id=current_user.id,user_role = current_user.user_role)
             return redirect('/')
         except ValidationError as val:
             return render_template('job.html', err_msg=str(val), categories=categories)

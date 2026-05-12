@@ -159,7 +159,6 @@ def add_job(title, description, salary, deadline, category_id, employer_id, user
     title, salary, deadline = _validate_job_fields(title, salary, deadline)
     if Job.query.filter(func.lower(Job.title)==title.lower(), Job.employer_id == employer_id).first():
         raise DuplicateError("Tin tuyển dụng đã tồn tại!")
-
     j = Job(title=title, description=description, salary=salary, deadline=deadline, category_id=category_id, employer_id=employer_id)
     db.session.add(j)
     try:

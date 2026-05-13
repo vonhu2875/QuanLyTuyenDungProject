@@ -253,7 +253,6 @@ def register_routes_nv3(app):
             return redirect(url_for('manage_applications', job_id=job_id))
 
 
-
     # Quản lý tin đăng
     @app.route('/jobs')
     @login_required

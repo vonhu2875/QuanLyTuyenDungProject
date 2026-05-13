@@ -208,9 +208,12 @@ def register_routes_nv3(app):
         return render_template('manage_applications.html', apps_by_job=apps_by_job, now=datetime.now())
 
     # Cập nhật trạng thái hồ sơ (EMPLOYER/ADMIN)
-    @app.route('/applications/<int:app_id>/status', methods=['PATCH'])
+    @app.route('/applications/<int:app_id>/status', methods=['GET', 'PATCH'])
     @login_required
     def update_status(app_id):
+        if request.method == 'GET':
+            return redirect('/')
+
         if current_user.user_role == UserRole.CANDIDATE:
             return jsonify(success=False, message="Bạn không có quyền thực hiện thao tác này."), 403
 

@@ -7,6 +7,9 @@ from flask import Flask
 from rapp import db
 from rapp.models import Job, User, UserRole, Category
 from rapp.index import register_routes_nv1, register_routes_nv2, register_routes_nv3
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
@@ -131,3 +134,19 @@ def job_to_apply(test_session, sample_category, sample_employer):
     test_session.add(job)
     test_session.commit()
     return job
+
+
+import os
+import pytest
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+
+
+@pytest.fixture
+def driver():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    driver_path = os.path.abspath(os.path.join(current_dir, "../../.venv/chromedriver.exe"))
+    service = Service(executable_path=driver_path)
+    driver = webdriver.Chrome(service=service)
+    yield driver
+    driver.quit()

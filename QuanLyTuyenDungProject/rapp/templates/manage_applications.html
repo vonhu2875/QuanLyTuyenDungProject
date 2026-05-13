@@ -144,7 +144,6 @@
                                             </select>
                                             <button type="button"
                                                     class="btn btn-sm btn-jobhub rounded-pill px-3 shadow-sm btn-update-status"
-                                                    data-job-id="{{ job.id }}"
                                                     data-app-id="{{ app.id }}">Lưu</button>
                                         </div>
                                         {% else %}
@@ -212,16 +211,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── PATCH cập nhật trạng thái hồ sơ ──
     document.querySelectorAll('.btn-update-status').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var jobId = this.dataset.jobId;
             var appId = this.dataset.appId;
             var formData = new FormData();
             formData.append('status', document.getElementById('status-' + appId).value);
             btn.disabled = true;
             btn.textContent = 'Đang lưu...';
-            fetch('/jobs/' + jobId + '/applications/' + appId + '/status', {
+            fetch('/applications/' + appId + '/status', {
                 method: 'PATCH', body: formData
             })
             .then(function (res) { return res.json(); })

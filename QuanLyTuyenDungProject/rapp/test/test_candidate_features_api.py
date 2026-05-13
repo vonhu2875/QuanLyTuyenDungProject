@@ -14,7 +14,6 @@ def test_api_view_profile(test_client, mocker):
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
     mocker.patch('flask_login.current_user', FakeUser())
 
-    # Giả lập render_template trả về một chuỗi có chứa tên user
     mock_render = mocker.patch("rapp.index.render_template", return_value="Profile của Nguyễn Văn Hà")
 
     res = test_client.get('/profile')
@@ -24,7 +23,7 @@ def test_api_view_profile(test_client, mocker):
     assert "Nguyễn Văn Hà" in res.get_data(as_text=True)
 
 
-# TEST XEM CHI TIẾT VIỆC LÀM
+# 2. TEST XEM CHI TIẾT VIỆC LÀM
 def test_api_get_job_detail_success(test_client, mocker):
     class FakeUser():
         is_authenticated = True
@@ -33,7 +32,6 @@ def test_api_get_job_detail_success(test_client, mocker):
 
     mocker.patch('flask_login.utils._get_user', return_value=FakeUser())
 
-    # Giả lập 1 đối tượng Job trả về từ DAO
     mock_job = mocker.Mock()
     mock_job.id = 1
     mock_job.title = "Lập trình viên React"

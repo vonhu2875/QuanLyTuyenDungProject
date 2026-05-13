@@ -27,12 +27,10 @@ def test_apply_job_success(driver):
     time.sleep(2)
 
     job_detail_page.open_page(job_id=1)
-    time.sleep(1)
+    time.sleep(2)
 
     job_detail_page.click_apply()
-    time.sleep(1)
-
-
+    time.sleep(2)
     cv_path = os.path.abspath(os.path.join(current_dir, "..", "..", "FileTestCase", "MB0_2.pdf"))
 
     driver.execute_script('window.scrollTo(0, 200)')

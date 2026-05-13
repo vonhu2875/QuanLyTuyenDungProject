@@ -199,13 +199,13 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     if not job:
         raise ValidationError("Tin tuyển dụng không tồn tại!")
 
-    # RÀNG BUỘC: Không nộp sau hạn hoặc tin đã đóng thủ công
+    # Không nộp sau hạn hoặc tin đã đóng thủ công
     if not job.active:
         raise ValidationError("Tin tuyển dụng này đã đóng hoặc không còn tồn tại!")
     if job.deadline < datetime.now():
         raise ValidationError("Đã hết hạn nộp hồ sơ!")
 
-    # 3. Kiểm tra nộp trùng (1 hồ sơ / 1 vị trí)
+    # 3. Kiểm tra nộp trùng
     exists = Application.query.filter_by(job_id=job_id, candidate_id=candidate_id).first()
     if exists:
         raise DuplicateError("Bạn đã nộp hồ sơ cho công việc này rồi!")
@@ -215,13 +215,13 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
         raise ValidationError("Vui lòng tải lên CV của bạn!")
 
     # Kiểm tra nội dung thực
-    header = cv_file.read(4)  # Đọc 4 byte đầu tiên
-    cv_file.seek(0)  # Reset con trỏ file ngay lập tức
+    header = cv_file.read(4)
+    cv_file.seek(0)
 
     # Kiểm tra dung lượng (0 < size <= 10MB)
     blob = cv_file.read()
     size = len(blob)
-    cv_file.seek(0)  # Reset con trỏ file sau khi read
+    cv_file.seek(0)
 
     if size <= 0:
         raise ValidationError("File CV không được để trống!")
@@ -233,7 +233,6 @@ def apply_for_job(job_id, candidate_id, user_role, cv_file):
     if ext != '.pdf':
         raise ValidationError("Hệ thống chỉ chấp nhận file định dạng .pdf (Word, Excel... sẽ bị từ chối)!")
 
-    # %PDF tương ứng với b'\x25\x50\x44\x46'
     if header != b'%PDF':
         raise ValidationError("Nội dung file không phải là PDF hợp lệ!")
 
@@ -258,7 +257,6 @@ def get_job_by_id(job_id):
     return Job.query.get(job_id)
 
 def check_applied(candidate_id, job_id):
-    from rapp.models import Application
     return (Application.query
                         .filter_by(candidate_id=candidate_id, job_id=job_id)
                         .first() is not None)

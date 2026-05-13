@@ -63,7 +63,7 @@
                         <li><a class="dropdown-item" href="{{ url_for('my_applications') }}"><i class="bi bi-briefcase me-2"></i>Việc làm đã nộp</a></li>
                         {% elif current_user.user_role.name == 'EMPLOYER' or current_user.user_role.name == 'ADMIN' %}
                         <li>
-                            <a class="dropdown-item" href="/jobs">
+                            <a class="dropdown-item" href="/jobs/create">
                                 <i class="bi bi-plus-circle me-2 text-success"></i>Đăng tin tuyển dụng
                             </a>
                         </li>

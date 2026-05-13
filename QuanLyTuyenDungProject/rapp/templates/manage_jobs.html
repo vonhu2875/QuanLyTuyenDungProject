@@ -7,7 +7,7 @@
             <h2 class="fw-bold text-dark">Quản lý tin tuyển dụng</h2>
             <p class="text-muted">Bạn có <span class="badge bg-jobhub">{{ jobs|length }}</span> tin đăng trong hệ thống</p>
         </div>
-        <a href="/jobs" class="btn btn-jobhub rounded-pill px-4 fw-bold shadow-sm">
+        <a href="/jobs/create" class="btn btn-jobhub rounded-pill px-4 fw-bold shadow-sm">
             <i class="bi bi-plus-lg me-1"></i> Đăng tin mới
         </a>
     </div>
@@ -46,9 +46,9 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ url_for('manage_applications', job_id=j.id) }}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm" title="Xem hồ sơ ứng tuyển">
-                                    <i class="bi bi-people"></i>
-                                </a>
+                                <span class="text-muted small">
+                                    <i class="bi bi-people me-1"></i>{{ j.applications|length }}
+                                </span>
                                 <a href="/jobs/{{ j.id }}/edit" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
@@ -88,8 +88,11 @@
 <script>
 document.querySelectorAll('.btn-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        fetch('/jobs/' + this.dataset.jobId + '/active', { method: 'PATCH' })
-            .then(function () { window.location.reload(); });
+        fetch('/jobs/' + this.dataset.jobId, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=toggle'
+        }).then(function () { window.location.reload(); });
     });
 });
 

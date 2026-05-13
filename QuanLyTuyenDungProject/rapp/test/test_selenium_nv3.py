@@ -44,7 +44,7 @@ def test_security(driver):
     time.sleep(2)
     driver.get("http://127.0.0.1:5000/users/jobs")
     time.sleep(2)
-    assert driver.current_url == "http://127.0.0.1:5000/"  # Bị đá về trang chủ
+    assert driver.current_url == "http://127.0.0.1:5000/" 
 
     # Employer cố nộp hồ sơ
     driver.get("http://127.0.0.1:5000/logout")

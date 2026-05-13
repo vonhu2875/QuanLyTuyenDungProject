@@ -199,7 +199,7 @@ def register_routes_nv2(app):
 #=========================Nghiệp vụ 3: Đẹp trai có gì sai (Nhu Toàn )==========================
 
 def register_routes_nv3(app):
-    @app.route('/manage-applications')
+    @app.route('/applications')
     @login_required
     def all_applications():
         if current_user.user_role == UserRole.CANDIDATE:
@@ -225,7 +225,7 @@ def register_routes_nv3(app):
         return render_template('applications.html', applications=applications, job=job)
 
 
-    @app.route('/jobs/<int:job_id>/applications/<int:app_id>/status', methods=['POST', 'PATCH'])
+    @app.route('/jobs/<int:job_id>/applications/<int:app_id>/status', methods=['PATCH'])
     @login_required
     def update_status(job_id, app_id):
         if current_user.user_role == UserRole.CANDIDATE:
@@ -253,8 +253,9 @@ def register_routes_nv3(app):
             return redirect(url_for('manage_applications', job_id=job_id))
 
 
+
     # Quản lý tin đăng
-    @app.route('/manage_jobs')
+    @app.route('/jobs')
     @login_required
     def manage_jobs():
         if current_user.user_role.name not in ['EMPLOYER', 'ADMIN']:
@@ -270,19 +271,19 @@ def register_routes_nv3(app):
                                now=datetime.now())
 
     #Tính năng đóng/mở tin
-    @app.route('/toggle_job_status/<int:job_id>', methods=['POST'])
+    @app.route('/jobs/<int:job_id>/active', methods=['PATCH'])
     @login_required
     def toggle_status(job_id):
         job = dao.get_job_by_id(job_id)
         if not job:
-            return "Lỗi: Không tìm thấy tin đăng", 404
+            return jsonify(success=False, message="Không tìm thấy tin đăng"), 404
         if current_user.user_role == UserRole.EMPLOYER and job.employer_id != current_user.id:
-            return "Bạn không có quyền thực hiện thao tác này!", 403
+            return jsonify(success=False, message="Bạn không có quyền thực hiện thao tác này!"), 403
         dao.toggle_job_active(job_id)
-        return redirect(url_for('manage_jobs'))
+        return jsonify(success=True)
 
     #Xóa tin
-    @app.route('/delete_job/<int:job_id>', methods=['DELETE'])
+    @app.route('/jobs/<int:job_id>', methods=['DELETE'])
     @login_required
     def delete_job(job_id):
         job = Job.query.get_or_404(job_id)
@@ -290,10 +291,11 @@ def register_routes_nv3(app):
             Application.query.filter_by(job_id=job_id).delete()
             db.session.delete(job)
             db.session.commit()
-        return redirect(url_for('manage_jobs'))
+        return jsonify(success=True)
 
     #Sửa tin
-    @app.route('/edit_job/<int:job_id>', methods=['GET', 'PATCH'])
+    @app.route('/jobs/<int:job_id>/edit', methods=['GET'])
+    @app.route('/jobs/<int:job_id>', methods=['PATCH'])
     @login_required
     def edit_job(job_id):
         job = Job.query.get_or_404(job_id)

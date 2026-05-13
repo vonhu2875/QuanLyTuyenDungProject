@@ -47,7 +47,7 @@ def test_manage_applications_employer_other_job(test_client, mocker):
     res = test_client.get('/jobs/2/manage-applications')
 
     assert res.status_code == 302
-    assert 'manage_jobs' in res.location
+    assert res.location == '/jobs'
 
 
 def test_manage_applications_candidate_redirect(test_client, mocker):
@@ -78,7 +78,7 @@ def test_manage_applications_job_not_found(test_client, mocker):
     res = test_client.get('/jobs/999/manage-applications')
 
     assert res.status_code == 302
-    assert 'manage_jobs' in res.location
+    assert res.location == '/jobs'
 
 
 def test_manage_applications_admin_any_job(test_client, mocker):

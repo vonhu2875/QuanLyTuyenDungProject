@@ -68,6 +68,3 @@ def test_existing_job(test_session):
         add_job(title='tuyển dụng Lập trình viên Java', description='dfx', salary=708000,
                 deadline=datetime.now() + timedelta(days=365),
                 category_id=2, employer_id=1, user_role=UserRole.ADMIN)
-
-
-

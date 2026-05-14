@@ -18,13 +18,14 @@
         };
     </script>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 {% block header %}
 {% include 'layout/header.html' %}
 {% endblock %}
-
+<div class="flex-grow-1 mt-3 mb-5">
 {% block content required %}
 {% endblock %}
+</div>
 
 {% block footer %}
 {% include 'layout/footer.html' %}

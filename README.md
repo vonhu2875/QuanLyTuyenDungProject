@@ -1,4 +1,4 @@
-# FINAL PROJECT SOFTWARE TESTING - ONLINE JOB BOARD PLATFORM
+# FINAL PROJECT SOFTWARE TESTING - RECRUITMENT MANAGEMENT SYSTEM
 ## Mô tả 
 
 Sàn Việc Làm Trực Tuyến là một ứng dụng di động kết nối nhà tuyển dụng và ứng viên, hỗ trợ toàn bộ quy trình tuyển dụng từ đăng tin tuyển dụng đến nộp hồ sơ ứng tuyển. Hệ thống được phát triển với Django REST Framework cho backend và React Native cho frontend, cung cấp các RESTful API để quản lý người dùng, tin tuyển dụng và hồ sơ ứng tuyển.

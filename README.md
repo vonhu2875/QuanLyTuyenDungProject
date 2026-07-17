@@ -1,15 +1,15 @@
 # FINAL PROJECT SOFTWARE TESTING - RECRUITMENT MANAGEMENT SYSTEM
 ## Mô tả 
 
-Sàn Việc Làm Trực Tuyến là một ứng dụng di động kết nối nhà tuyển dụng và ứng viên, hỗ trợ toàn bộ quy trình tuyển dụng từ đăng tin tuyển dụng đến nộp hồ sơ ứng tuyển. Hệ thống được phát triển với Django REST Framework cho backend và React Native cho frontend, cung cấp các RESTful API để quản lý người dùng, tin tuyển dụng và hồ sơ ứng tuyển.
+Quản lý tuyển dụng là một website giúp kết nối nhà tuyển dụng và ứng viên, hỗ trợ toàn bộ quy trình tuyển dụng từ đăng tin tuyển dụng đến nộp hồ sơ ứng tuyển. Hệ thống được phát triển với Django REST Framework cho backend và React Native cho frontend, cung cấp các RESTful API để quản lý người dùng, tin tuyển dụng và hồ sơ ứng tuyển.
 
-Ứng dụng hỗ trợ ba vai trò chính:
+Trang web hỗ trợ ba vai trò chính:
 
 - Quản trị viên (Admin): Quản lý người dùng, doanh nghiệp, tin tuyển dụng và phê duyệt doanh nghiệp.
 - Nhà tuyển dụng (Employer): Quản lý thông tin doanh nghiệp, đăng tin tuyển dụng, theo dõi và xử lý hồ sơ ứng tuyển.
 - Ứng viên (Candidate): Tìm kiếm việc làm, xem chi tiết tin tuyển dụng, lưu việc làm và nộp hồ sơ ứng tuyển.
 
-Ứng dụng có 3 nghiệp vụ chính:
+Trang web có 3 nghiệp vụ chính:
 
 1.	Đăng tin tuyển dụng.
 2.	Nộp hồ sơ.
